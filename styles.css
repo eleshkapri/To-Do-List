@@ -1,0 +1,225 @@
+/* Custom Properties for Liquid Glass Effect */
+:root {
+    --background: #f0f4f8; /* Soft background to enhance the glass effect */
+    --surface: rgba(255, 255, 255, 0.5); /* Semi-transparent white for glass */
+    --primary: #205cdc; 
+    --primary-hover: #5d8abf;
+    --text: #334e68;
+    --delete: #e36262;
+    --delete-hover: #ef1a33;
+    --item-bg: rgba(255, 255, 255, 0.4); /* Slightly more transparent for items */
+    --glass-border: 1px solid rgba(255, 255, 255, 0.18); /* Light, thin border */
+    --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.1);
+    --shadow-deep: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+/* Dark Mode Liquid Glass */
+body.dark-mode {
+    --background: #1f2937; 
+    --surface: rgba(44, 62, 80, 0.5); /* Semi-transparent dark surface */
+    --primary: #3980c6; 
+    --primary-hover: #5d8abf;
+    --text: #f0f4f8;
+    --delete: #ff9f43; 
+    --delete-hover: #e57e28;
+    --item-bg: rgba(51, 78, 104, 0.4); /* More transparent dark item */
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1); /* Lighter border for dark mode */
+    --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.3);
+    --shadow-deep: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease; 
+}
+
+body {
+    font-family: 'Inter', sans-serif; 
+    background-color: var(--background);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px; /* Essential for responsiveness */
+    background: linear-gradient(135deg, var(--background) 0%, #c4d7e8 100%);
+}
+
+body.dark-mode {
+    background: linear-gradient(135deg, var(--background) 0%, #3e5c76 100%);
+}
+
+.container {
+    background-color: var(--surface);
+    padding: 2rem;
+    border-radius: 20px;
+    width: 100%; /* Ensures it fills available width */
+    max-width: 450px;
+    box-shadow: var(--shadow-deep); 
+    border: var(--glass-border);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 2rem; 
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+/* Make input container wrap items on smaller screens */
+.input-container {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 2rem;
+    align-items: center;
+    /* KEY RESPONSIVE CHANGE: Allow wrapping */
+    flex-wrap: wrap; 
+}
+
+input[type="text"] {
+    /* KEY RESPONSIVE CHANGE: Allow input to take up most of the space */
+    flex: 1 1 60%; 
+    padding: 14px;
+    background-color: var(--item-bg);
+    border: var(--glass-border);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+}
+
+button {
+    padding: 14px 20px;
+    background-color: var(--primary);
+    border: none;
+    border-radius: 12px;
+    color: #ffffff;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    flex-shrink: 0; 
+}
+
+.icon-btn {
+    width: 45px;
+    height: 45px;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 50%;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+button:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-2px); 
+    box-shadow: var(--shadow-light);
+}
+
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+li {
+    background-color: var(--item-bg);
+    padding: 14px 16px; 
+    margin-bottom: 12px;
+    border-radius: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: var(--glass-border); 
+    box-shadow: var(--shadow-light); 
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+li:hover {
+    background-color: rgba(164, 167, 195, 0.6); 
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-light);
+}
+
+li.completed {
+    text-decoration: line-through;
+    opacity: 0.6;
+    background-color: rgba(240, 244, 248, 0.3); 
+    border-color: transparent;
+}
+
+li button {
+    background-color: var(--delete);
+    padding: 8px 10px;
+    font-size: 0.9rem;
+    border-radius: 8px; 
+    font-weight: 500;
+    transform: none; 
+}
+
+li button:hover {
+    background-color: var(--delete-hover);
+    transform: translateY(-1px);
+    box-shadow: none;
+}
+
+
+/* --- MEDIA QUERY for Mobile Optimization (Screens < 400px) --- */
+
+@media (max-width: 400px) {
+    
+    body {
+        padding: 10px; /* Reduce global padding */
+    }
+    .container {
+        padding: 1.5rem; /* Reduce container padding */
+    }
+    h1 {
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .input-container {
+        flex-direction: column; /* Stack input and add button vertically */
+        gap: 15px; 
+    }
+
+    input[type="text"] {
+        flex: 1 1 100%; /* Take full width */
+        width: 100%;
+        padding: 12px;
+    }
+    
+    /* Make the Add Task button full width */
+    #add-task-btn {
+        flex: 1 1 100%; 
+        width: 100%;
+        padding: 12px 20px;
+    }
+    
+    /* Position the small toggle button in the corner */
+    #theme-toggle-btn {
+        position: absolute; 
+        top: 20px;
+        right: 20px;
+        align-self: flex-end; /* Ensure it stays aligned in the corner */
+        /* Restore original size/shape */
+        width: 45px;
+        height: 45px;
+        flex: 0 0 auto; 
+    }
+    
+    li {
+        padding: 12px;
+        font-size: 0.95rem;
+    }
+}
