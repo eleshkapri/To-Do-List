@@ -1,6 +1,6 @@
 /**
- * Taskflow — Modern & Visual Task Management Dashboard
- * Dynamic greetings, radial progress ring, project focus cards, and full CRUD.
+ * Taskflow — Emerald & Electric Violet Edition
+ * Dynamic time greetings, radial progress ring, focus project cards, and full CRUD.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -9,15 +9,15 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================================================
 
     const STORAGE_KEYS = {
-        TASKS: "taskflow_vis_tasks",
-        PROJECTS: "taskflow_vis_projects",
-        NOTES: "taskflow_vis_notes",
-        THEME: "taskflow_vis_theme",
+        TASKS: "taskflow_ev_tasks",
+        PROJECTS: "taskflow_ev_projects",
+        NOTES: "taskflow_ev_notes",
+        THEME: "taskflow_ev_theme",
     };
 
     const defaultProjects = [
-        { id: "proj-work", name: "Work & Career", color: "#6366f1", icon: "fa-briefcase" },
-        { id: "proj-learning", name: "Learning & Code", color: "#10b981", icon: "fa-code" },
+        { id: "proj-work", name: "Work & Career", color: "#10b981", icon: "fa-briefcase" },
+        { id: "proj-learning", name: "Learning & Code", color: "#8b5cf6", icon: "fa-code" },
         { id: "proj-personal", name: "Personal Life", color: "#06b6d4", icon: "fa-user" },
         { id: "proj-side", name: "Side Projects", color: "#f59e0b", icon: "fa-rocket" }
     ];
@@ -37,8 +37,8 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             id: "task-2",
-            title: "Practice modern UI design and CSS custom properties",
-            description: "Build clean card components, glassmorphic glows, and responsive grids.",
+            title: "Master Emerald & Electric Violet CSS design systems",
+            description: "Build clean glassmorphic components, glowing orbs, and responsive grids.",
             project: "proj-learning",
             priority: "p2",
             dueDate: getFormattedDate(0), // Today
@@ -49,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             id: "task-3",
-            title: "Plan weekend hiking trail & gear checklist",
+            title: "Plan weekend outdoor trail & camera gear",
             description: "Check weather forecast and prepare hydration pack.",
             project: "proj-personal",
             priority: "p3",
@@ -86,7 +86,7 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             id: "note-3",
-            content: "✨ Modern Design Tip: Subtle background glows make interfaces feel alive and elevated.",
+            content: "✨ Design Tip: Emerald & Electric Violet create high-contrast, modern visual harmony.",
             date: "Aug 21"
         }
     ];
@@ -480,7 +480,7 @@ document.addEventListener("DOMContentLoaded", () => {
         li.className = `task-row ${task.completed ? "completed" : ""}`;
         li.dataset.id = task.id;
 
-        const proj = projects.find(p => p.id === task.project) || { name: "Inbox", color: "#6366f1" };
+        const proj = projects.find(p => p.id === task.project) || { name: "Inbox", color: "#10b981" };
         li.style.setProperty("--task-project-color", proj.color);
 
         const dueDateInfo = formatDue(task.dueDate);
@@ -679,7 +679,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const newProj = {
             id: `proj-${Date.now()}`,
             name: name.trim(),
-            color: color || "#6366f1",
+            color: color || "#10b981",
             icon: randomIcon
         };
 
@@ -748,7 +748,7 @@ document.addEventListener("DOMContentLoaded", () => {
         toast.className = "toast";
         toast.innerHTML = `
             <span>${msg}</span>
-            ${allowUndo ? `<button class="btn btn-sm" style="color: #818cf8; padding: 2px 4px;" id="toast-undo">Undo</button>` : ""}
+            ${allowUndo ? `<button class="btn btn-sm" style="color: #34d399; padding: 2px 4px;" id="toast-undo">Undo</button>` : ""}
         `;
 
         if (allowUndo && undoCb) {
