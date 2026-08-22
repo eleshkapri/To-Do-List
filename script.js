@@ -1,198 +1,183 @@
 /**
- * TaskFlow - Modern Task Management Dashboard
- * Full feature script with localStorage persistence, dynamic views,
- * weekly calendar timeline, sticky notes wall, and custom list management.
+ * Taskflow — Minimalist Modern Task Manager
+ * Clean, distraction-free task management inspired by Todoist & Apple Reminders.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
     // ==========================================================================
-    // INITIAL STATE & STORAGE
+    // DATA MODEL & STORAGE
     // ==========================================================================
 
     const STORAGE_KEYS = {
-        TASKS: "taskflow_tasks",
-        CATEGORIES: "taskflow_categories",
-        STICKY_NOTES: "taskflow_sticky_notes",
-        THEME: "taskflow_theme",
+        TASKS: "taskflow_min_tasks",
+        PROJECTS: "taskflow_min_projects",
+        NOTES: "taskflow_min_notes",
+        THEME: "taskflow_min_theme",
     };
 
-    // Default starter categories
-    const defaultCategories = [
-        { id: "cat-work", name: "Work", color: "#4f46e5" },
-        { id: "cat-personal", name: "Personal", color: "#06b6d4" },
-        { id: "cat-study", name: "Study", color: "#10b981" },
-        { id: "cat-design", name: "Design System", color: "#ec4899" }
+    const defaultProjects = [
+        { id: "proj-work", name: "Work", color: "#4f46e5" },
+        { id: "proj-personal", name: "Personal", color: "#06b6d4" },
+        { id: "proj-learning", name: "Learning", color: "#10b981" },
+        { id: "proj-side", name: "Side Projects", color: "#f59e0b" }
     ];
 
-    // Default sample tasks if none exist
     const defaultTasks = [
         {
             id: "task-1",
-            title: "Design user onboarding flow wireframes",
-            description: "Sketch initial concepts and user journey maps for mobile & desktop.",
-            category: "cat-design",
-            priority: "high",
+            title: "Submit quarterly project milestone report",
+            description: "Include sprint velocity, key deliverables, and next roadmap milestones.",
+            project: "proj-work",
+            priority: "p1",
             dueDate: getFormattedDate(0), // Today
-            tag: "design",
+            tag: "urgent",
+            starred: true,
             completed: false,
             createdAt: new Date().toISOString()
         },
         {
             id: "task-2",
-            title: "Review pull requests for API endpoints",
-            description: "Check authentication middleware and test error handlers.",
-            category: "cat-work",
-            priority: "medium",
+            title: "Review JavaScript async/await patterns",
+            description: "Practice promises, Promise.allSettled, and microtask queues.",
+            project: "proj-learning",
+            priority: "p2",
             dueDate: getFormattedDate(0), // Today
             tag: "dev",
-            completed: true,
+            starred: false,
+            completed: false,
             createdAt: new Date().toISOString()
         },
         {
             id: "task-3",
-            title: "Read Chapter 4 of System Design Handbook",
-            description: "Focus on caching strategies, redis pub/sub, and database sharding.",
-            category: "cat-study",
-            priority: "low",
+            title: "Plan weekend hiking trail & gear checklist",
+            description: "Check weather forecast and prepare hydration pack.",
+            project: "proj-personal",
+            priority: "p3",
             dueDate: getFormattedDate(1), // Tomorrow
-            tag: "personal",
+            tag: "general",
+            starred: false,
             completed: false,
             createdAt: new Date().toISOString()
         },
         {
             id: "task-4",
-            title: "Sprint retrospective meeting with team",
-            description: "Discuss velocity, blockers from previous sprint, and upcoming roadmap.",
-            category: "cat-work",
-            priority: "high",
+            title: "Refactor CSS styling to modern custom variables",
+            description: "Clean up unused classes and verify mobile breakpoints.",
+            project: "proj-side",
+            priority: "p2",
             dueDate: getFormattedDate(2),
-            tag: "urgent",
-            completed: false,
+            tag: "design",
+            starred: true,
+            completed: true,
             createdAt: new Date().toISOString()
         }
     ];
 
-    // Default sticky notes
-    const defaultStickyNotes = [
+    const defaultNotes = [
         {
-            id: "sticky-1",
-            content: "💡 Idea: Add drag-and-drop task sorting in future update!",
-            color: "yellow",
+            id: "note-1",
+            content: "💡 Project Idea: Build a lightweight habit tracker with minimalist streak counters.",
             date: "Today"
         },
         {
-            id: "sticky-2",
-            content: "📌 Reminder: Submit quarterly course project by next Friday.",
-            color: "blue",
+            id: "note-2",
+            content: "📌 Books to read: Refactoring UI, Clean Code, Atomic Habits.",
             date: "Aug 22"
-        },
-        {
-            id: "sticky-3",
-            content: "✨ Keep code clean, modular, and well-documented.",
-            color: "pink",
-            date: "Aug 20"
         }
     ];
 
-    // Load data from localStorage or fallback
+    // State
     let tasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS)) || defaultTasks;
-    let categories = JSON.parse(localStorage.getItem(STORAGE_KEYS.CATEGORIES)) || defaultCategories;
-    let stickyNotes = JSON.parse(localStorage.getItem(STORAGE_KEYS.STICKY_NOTES)) || defaultStickyNotes;
+    let projects = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROJECTS)) || defaultProjects;
+    let notes = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTES)) || defaultNotes;
     let isDarkMode = localStorage.getItem(STORAGE_KEYS.THEME) === "dark";
 
-    // Application View & Filter State
-    let currentView = "today"; // 'today' | 'upcoming' | 'calendar' | 'sticky' | 'completed' | categoryId
-    let currentStatusFilter = "all"; // 'all' | 'active' | 'completed'
-    let currentPriorityFilter = "all"; // 'all' | 'high' | 'medium' | 'low'
-    let currentTagFilter = "all"; // 'all' | tag name
+    let currentView = "today"; // 'inbox' | 'today' | 'upcoming' | 'starred' | 'completed' | 'notes' | projectId
+    let currentPriorityFilter = "all";
+    let currentTagFilter = "all";
     let searchQuery = "";
     let sortBy = "dueDate-asc";
-    let selectedCalendarDate = null; // 'YYYY-MM-DD'
-    let currentWeekOffset = 0; // 0 = current week, -1 = last week, +1 = next week
+    let isCompletedAccordionOpen = true;
 
-    let lastDeletedTask = null; // For Undo functionality
+    let lastDeletedTask = null;
 
     // ==========================================================================
     // DOM ELEMENTS
     // ==========================================================================
 
     const body = document.body;
-    const themeToggleBtn = document.getElementById("theme-toggle-btn");
-    const globalSearchInput = document.getElementById("global-search-input");
-    const currentViewTitle = document.getElementById("current-view-title");
-    const currentViewSubtitle = document.getElementById("current-view-subtitle");
-    const sidebarLists = document.getElementById("sidebar-lists");
-    const sidebarTags = document.getElementById("sidebar-tags");
-    const tasksContainer = document.getElementById("tasks-container");
-    const tasksEmptyState = document.getElementById("tasks-empty-state");
-    const priorityFilterSelect = document.getElementById("priority-filter-select");
-    const tasksSortSelect = document.getElementById("tasks-sort-select");
-    const toastContainer = document.getElementById("toast-container");
+    const themeToggle = document.getElementById("theme-toggle");
+    const globalSearch = document.getElementById("global-search");
+    const sidebarAddBtn = document.getElementById("sidebar-quick-add-btn");
+    const projectsList = document.getElementById("projects-list");
+    const tagsList = document.getElementById("tags-list");
 
-    // Badges & Metrics
-    const badgeToday = document.getElementById("badge-today");
-    const badgeUpcoming = document.getElementById("badge-upcoming");
-    const badgeSticky = document.getElementById("badge-sticky");
-    const badgeCompleted = document.getElementById("badge-completed");
-    const metricTotalCount = document.getElementById("metric-total-count");
-    const metricInprogressCount = document.getElementById("metric-inprogress-count");
-    const metricCompletedCount = document.getElementById("metric-completed-count");
-    const metricEfficiencyRate = document.getElementById("metric-efficiency-rate");
-    const productivityPercent = document.getElementById("productivity-percent");
-    const productivityBarFill = document.getElementById("productivity-bar-fill");
-    const productivityCaption = document.getElementById("productivity-caption");
-    const countStatusAll = document.getElementById("count-status-all");
-    const countStatusActive = document.getElementById("count-status-active");
-    const countStatusDone = document.getElementById("count-status-done");
+    // Counters
+    const countInbox = document.getElementById("count-inbox");
+    const countToday = document.getElementById("count-today");
+    const countUpcoming = document.getElementById("count-upcoming");
+    const countStarred = document.getElementById("count-starred");
+    const countCompleted = document.getElementById("count-completed");
+    const countNotes = document.getElementById("count-notes");
+    const progressText = document.getElementById("progress-text");
+    const progressFill = document.getElementById("progress-fill");
 
-    // Quick Add
-    const quickTaskInput = document.getElementById("quick-task-input");
-    const quickTaskCategory = document.getElementById("quick-task-category");
-    const quickTaskPriority = document.getElementById("quick-task-priority");
-    const quickTaskDate = document.getElementById("quick-task-date");
-    const quickAddBtn = document.getElementById("quick-add-btn");
+    // Main Header
+    const viewTitle = document.getElementById("view-title");
+    const viewSubtitle = document.getElementById("view-subtitle");
+    const viewTaskBadge = document.getElementById("view-task-badge");
+    const priorityFilter = document.getElementById("priority-filter");
+    const sortFilter = document.getElementById("sort-filter");
 
-    // Weekly Strip
-    const calendarMonthYear = document.getElementById("calendar-month-year");
-    const calendarWeekNumber = document.getElementById("calendar-week-number");
-    const weeklyDaysContainer = document.getElementById("weekly-days-container");
-    const calPrevWeekBtn = document.getElementById("cal-prev-week");
-    const calNextWeekBtn = document.getElementById("cal-next-week");
-    const calGoTodayBtn = document.getElementById("cal-go-today");
+    // Task Creator
+    const taskInputTitle = document.getElementById("task-input-title");
+    const taskInputDesc = document.getElementById("task-input-desc");
+    const taskInputDate = document.getElementById("task-input-date");
+    const taskInputPriority = document.getElementById("task-input-priority");
+    const taskInputProject = document.getElementById("task-input-project");
+    const taskInputTag = document.getElementById("task-input-tag");
+    const submitInlineAdd = document.getElementById("submit-inline-add");
+    const cancelInlineAdd = document.getElementById("cancel-inline-add");
 
-    // View Panes
-    const paneTasks = document.getElementById("pane-tasks");
-    const paneWeeklySchedule = document.getElementById("pane-weekly-schedule");
-    const paneStickyWall = document.getElementById("pane-sticky-wall");
-    const weeklyScheduleBoard = document.getElementById("weekly-schedule-board");
-    const stickyNotesGrid = document.getElementById("sticky-notes-grid");
+    // Lists & Containers
+    const paneTasksView = document.getElementById("pane-tasks-view");
+    const paneNotesView = document.getElementById("pane-notes-view");
+    const activeTasksList = document.getElementById("active-tasks-list");
+    const completedTasksList = document.getElementById("completed-tasks-list");
+    const completedSection = document.getElementById("completed-section");
+    const completedToggleBtn = document.getElementById("completed-toggle-btn");
+    const completedToggleArrow = document.getElementById("completed-toggle-arrow");
+    const completedAccordionCount = document.getElementById("completed-accordion-count");
+    const emptyState = document.getElementById("empty-state");
+    const emptyStateMsg = document.getElementById("empty-state-msg");
+
+    // Notes
+    const notesGrid = document.getElementById("notes-grid");
+    const btnAddNote = document.getElementById("btn-add-note");
 
     // Modals
-    const taskModal = document.getElementById("task-modal");
-    const taskForm = document.getElementById("task-form");
-    const taskModalTitle = document.getElementById("task-modal-title");
-    const taskEditIdInput = document.getElementById("task-edit-id");
-    const modalTaskTitle = document.getElementById("modal-task-title");
-    const modalTaskDesc = document.getElementById("modal-task-desc");
-    const modalTaskCategory = document.getElementById("modal-task-category");
-    const modalTaskPriority = document.getElementById("modal-task-priority");
-    const modalTaskDate = document.getElementById("modal-task-date");
-    const modalTaskTag = document.getElementById("modal-task-tag");
-    const openNewTaskModalBtn = document.getElementById("open-new-task-modal");
-    const taskModalCloseBtn = document.getElementById("task-modal-close");
-    const taskModalCancelBtn = document.getElementById("task-modal-cancel");
+    const editModal = document.getElementById("edit-modal");
+    const editTaskForm = document.getElementById("edit-task-form");
+    const editTaskId = document.getElementById("edit-task-id");
+    const editTitle = document.getElementById("edit-title");
+    const editDesc = document.getElementById("edit-desc");
+    const editProject = document.getElementById("edit-project");
+    const editPriority = document.getElementById("edit-priority");
+    const editDate = document.getElementById("edit-date");
+    const editTag = document.getElementById("edit-tag");
+    const editModalClose = document.getElementById("edit-modal-close");
+    const editModalCancel = document.getElementById("edit-modal-cancel");
 
-    const listModal = document.getElementById("list-modal");
-    const listForm = document.getElementById("list-form");
-    const openAddListModalBtn = document.getElementById("open-add-list-modal");
-    const listModalCloseBtn = document.getElementById("list-modal-close");
-    const listModalCancelBtn = document.getElementById("list-modal-cancel");
-    const modalListName = document.getElementById("modal-list-name");
+    const projectModal = document.getElementById("project-modal");
+    const projectForm = document.getElementById("project-form");
+    const projectName = document.getElementById("project-name");
+    const btnAddProject = document.getElementById("btn-add-project");
+    const projectModalClose = document.getElementById("project-modal-close");
+    const projectModalCancel = document.getElementById("project-modal-cancel");
 
-    const addStickyNoteBtn = document.getElementById("add-sticky-note-btn");
-    const emptyStateAddBtn = document.getElementById("empty-state-add-btn");
+    const toastBox = document.getElementById("toast-box");
 
-    // Mobile Sidebar Elements
+    // Mobile Sidebar
     const sidebar = document.getElementById("sidebar");
     const sidebarBackdrop = document.getElementById("sidebar-backdrop");
     const mobileSidebarToggle = document.getElementById("mobile-sidebar-toggle");
@@ -204,413 +189,314 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function init() {
         applyTheme(isDarkMode);
-        populateCategorySelects();
+        populateProjectDropdowns();
         setupEventListeners();
-        quickTaskDate.value = getFormattedDate(0); // Default to today
+        taskInputDate.value = getFormattedDate(0);
         refreshApp();
     }
 
     // ==========================================================================
-    // RENDER / REFRESH FUNCTIONS
+    // REFRESH & RENDER
     // ==========================================================================
 
     function refreshApp() {
-        renderSidebarLists();
-        renderWeeklyCalendarStrip();
-        renderMetrics();
+        renderSidebarProjects();
+        renderCounts();
+        renderHeader();
         renderTasks();
-        renderWeeklyScheduleBoard();
-        renderStickyWall();
-        updateViewHeading();
+        renderNotes();
     }
 
-    function updateViewHeading() {
-        const todayStr = new Date().toLocaleDateString("en-US", {
+    function renderHeader() {
+        const todayDate = new Date().toLocaleDateString("en-US", {
             weekday: "long",
             day: "numeric",
             month: "long"
         });
-        currentViewSubtitle.textContent = todayStr;
+        viewSubtitle.textContent = todayDate;
 
-        if (currentView === "today") {
-            currentViewTitle.textContent = "Today's Tasks";
+        if (currentView === "inbox") {
+            viewTitle.textContent = "Inbox";
+        } else if (currentView === "today") {
+            viewTitle.textContent = "Today";
         } else if (currentView === "upcoming") {
-            currentViewTitle.textContent = "Upcoming Tasks";
-        } else if (currentView === "calendar") {
-            currentViewTitle.textContent = "Weekly Schedule Overview";
-        } else if (currentView === "sticky") {
-            currentViewTitle.textContent = "Sticky Notes Wall";
+            viewTitle.textContent = "Upcoming";
+        } else if (currentView === "starred") {
+            viewTitle.textContent = "Important";
         } else if (currentView === "completed") {
-            currentViewTitle.textContent = "Completed Tasks Archive";
+            viewTitle.textContent = "Completed";
+        } else if (currentView === "notes") {
+            viewTitle.textContent = "Quick Notes";
         } else {
-            const currentCat = categories.find(c => c.id === currentView);
-            currentViewTitle.textContent = currentCat ? `${currentCat.name} Tasks` : "Tasks";
+            const proj = projects.find(p => p.id === currentView);
+            viewTitle.textContent = proj ? proj.name : "Tasks";
         }
     }
 
-    // Populate Category Dropdowns in Quick Add and Modals
-    function populateCategorySelects() {
-        const selects = [quickTaskCategory, modalTaskCategory];
-        selects.forEach(select => {
+    function populateProjectDropdowns() {
+        const dropdowns = [taskInputProject, editProject];
+        dropdowns.forEach(select => {
             if (!select) return;
             select.innerHTML = "";
-            categories.forEach(cat => {
+            projects.forEach(p => {
                 const opt = document.createElement("option");
-                opt.value = cat.id;
-                opt.textContent = cat.name;
+                opt.value = p.id;
+                opt.textContent = `# ${p.name}`;
                 select.appendChild(opt);
             });
         });
     }
 
-    // Render Categories in Sidebar
-    function renderSidebarLists() {
-        sidebarLists.innerHTML = "";
-        categories.forEach(cat => {
-            const count = tasks.filter(t => t.category === cat.id && !t.completed).length;
+    function renderSidebarProjects() {
+        projectsList.innerHTML = "";
+        projects.forEach(proj => {
+            const count = tasks.filter(t => t.project === proj.id && !t.completed).length;
             const btn = document.createElement("button");
-            btn.className = `list-item-btn ${currentView === cat.id ? "active" : ""}`;
-            btn.dataset.view = cat.id;
+            btn.className = `project-item-btn ${currentView === proj.id ? "active" : ""}`;
             btn.innerHTML = `
-                <div class="list-label">
-                    <span class="list-dot" style="background-color: ${cat.color};"></span>
-                    <span>${cat.name}</span>
+                <div class="project-left">
+                    <span class="project-dot" style="background-color: ${proj.color};"></span>
+                    <span>${proj.name}</span>
                 </div>
-                <span class="badge">${count}</span>
+                <span class="nav-count">${count}</span>
             `;
             btn.addEventListener("click", () => {
-                currentView = cat.id;
-                selectedCalendarDate = null;
-                switchViewPane("pane-tasks");
-                updateNavActiveStates();
+                currentView = proj.id;
+                switchPane("pane-tasks-view");
+                updateNavStates();
                 refreshApp();
             });
-            sidebarLists.appendChild(btn);
+            projectsList.appendChild(btn);
         });
     }
 
-    // Render Metrics & Productivity Bar
-    function renderMetrics() {
+    function renderCounts() {
+        const todayStr = getFormattedDate(0);
+
+        const inboxCount = tasks.filter(t => !t.project || t.project === "inbox" && !t.completed).length;
+        const todayCount = tasks.filter(t => t.dueDate === todayStr && !t.completed).length;
+        const upcomingCount = tasks.filter(t => t.dueDate > todayStr && !t.completed).length;
+        const starredCount = tasks.filter(t => t.starred && !t.completed).length;
+        const completedCount = tasks.filter(t => t.completed).length;
         const total = tasks.length;
-        const completed = tasks.filter(t => t.completed).length;
-        const inProgress = total - completed;
-        const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-        metricTotalCount.textContent = total;
-        metricInprogressCount.textContent = inProgress;
-        metricCompletedCount.textContent = completed;
-        metricEfficiencyRate.textContent = `${rate}%`;
+        countInbox.textContent = inboxCount;
+        countToday.textContent = todayCount;
+        countUpcoming.textContent = upcomingCount;
+        countStarred.textContent = starredCount;
+        countCompleted.textContent = completedCount;
+        countNotes.textContent = notes.length;
 
-        productivityPercent.textContent = `${rate}%`;
-        productivityBarFill.style.width = `${rate}%`;
-        productivityCaption.textContent = `${completed} of ${total} tasks completed`;
-
-        // Update Nav Badges
-        const todayDate = getFormattedDate(0);
-        const todayTasksCount = tasks.filter(t => t.dueDate === todayDate && !t.completed).length;
-        const upcomingTasksCount = tasks.filter(t => t.dueDate > todayDate && !t.completed).length;
-
-        badgeToday.textContent = todayTasksCount;
-        badgeUpcoming.textContent = upcomingTasksCount;
-        badgeSticky.textContent = stickyNotes.length;
-        badgeCompleted.textContent = completed;
-
-        // Update Tab Counts
-        countStatusAll.textContent = total;
-        countStatusActive.textContent = inProgress;
-        countStatusDone.textContent = completed;
+        const rate = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+        progressText.textContent = `${rate}%`;
+        progressFill.style.width = `${rate}%`;
     }
 
-    // Render Weekly Calendar Strip (Dribbble Inspired)
-    function renderWeeklyCalendarStrip() {
-        const curr = new Date();
-        // Calculate offset week Monday
-        const firstDayOfWeek = new Date(curr.setDate(curr.getDate() - curr.getDay() + 1 + (currentWeekOffset * 7)));
-        
-        const monthName = firstDayOfWeek.toLocaleDateString("en-US", { month: "long", year: "numeric" });
-        calendarMonthYear.textContent = monthName;
+    // ==========================================================================
+    // RENDER TASKS (Active & Completed)
+    // ==========================================================================
 
-        // Calculate ISO Week Number
-        const weekNum = getWeekNumber(firstDayOfWeek);
-        calendarWeekNumber.textContent = `W${weekNum}`;
-
-        weeklyDaysContainer.innerHTML = "";
-
-        const todayFormatted = getFormattedDate(0);
-
-        for (let i = 0; i < 7; i++) {
-            const dayDate = new Date(firstDayOfWeek);
-            dayDate.setDate(firstDayOfWeek.getDate() + i);
-
-            const dayString = dayDate.toISOString().split("T")[0];
-            const dayName = dayDate.toLocaleDateString("en-US", { weekday: "short" });
-            const dayNum = dayDate.getDate();
-
-            const isToday = dayString === todayFormatted;
-            const isSelected = dayString === selectedCalendarDate;
-            const hasTasks = tasks.some(t => t.dueDate === dayString && !t.completed);
-
-            const dayCard = document.createElement("div");
-            dayCard.className = `day-card ${isToday ? "is-today" : ""} ${isSelected ? "active" : ""} ${hasTasks ? "has-tasks" : ""}`;
-            dayCard.innerHTML = `
-                <span class="day-name">${dayName}</span>
-                <span class="day-number">${dayNum}</span>
-                <span class="day-indicator"></span>
-            `;
-
-            dayCard.addEventListener("click", () => {
-                if (selectedCalendarDate === dayString) {
-                    selectedCalendarDate = null; // Toggle off filter
-                } else {
-                    selectedCalendarDate = dayString;
-                }
-                renderWeeklyCalendarStrip();
-                renderTasks();
-            });
-
-            weeklyDaysContainer.appendChild(dayCard);
-        }
-    }
-
-    // Render Tasks in List View
     function renderTasks() {
-        tasksContainer.innerHTML = "";
+        activeTasksList.innerHTML = "";
+        completedTasksList.innerHTML = "";
 
         let filtered = [...tasks];
-
-        // 1. View Filter
         const todayStr = getFormattedDate(0);
-        if (currentView === "today") {
+
+        // View Filtering
+        if (currentView === "inbox") {
+            filtered = filtered.filter(t => !t.project || t.project === "inbox");
+        } else if (currentView === "today") {
             filtered = filtered.filter(t => t.dueDate === todayStr);
         } else if (currentView === "upcoming") {
             filtered = filtered.filter(t => t.dueDate > todayStr);
+        } else if (currentView === "starred") {
+            filtered = filtered.filter(t => t.starred);
         } else if (currentView === "completed") {
             filtered = filtered.filter(t => t.completed);
-        } else if (currentView !== "calendar" && currentView !== "sticky") {
-            // Category view
-            filtered = filtered.filter(t => t.category === currentView);
+        } else if (currentView !== "notes") {
+            filtered = filtered.filter(t => t.project === currentView);
         }
 
-        // 2. Calendar Specific Date Filter (if clicked on strip)
-        if (selectedCalendarDate) {
-            filtered = filtered.filter(t => t.dueDate === selectedCalendarDate);
-        }
-
-        // 3. Status Tab Filter
-        if (currentStatusFilter === "active") {
-            filtered = filtered.filter(t => !t.completed);
-        } else if (currentStatusFilter === "completed") {
-            filtered = filtered.filter(t => t.completed);
-        }
-
-        // 4. Priority Dropdown Filter
+        // Priority Filter
         if (currentPriorityFilter !== "all") {
             filtered = filtered.filter(t => t.priority === currentPriorityFilter);
         }
 
-        // 5. Tag Filter
+        // Tag Filter
         if (currentTagFilter !== "all") {
             filtered = filtered.filter(t => t.tag === currentTagFilter);
         }
 
-        // 6. Search Query
+        // Search Filter
         if (searchQuery.trim() !== "") {
             const q = searchQuery.toLowerCase();
-            filtered = filtered.filter(t => 
-                t.title.toLowerCase().includes(q) || 
+            filtered = filtered.filter(t =>
+                t.title.toLowerCase().includes(q) ||
                 (t.description && t.description.toLowerCase().includes(q))
             );
         }
 
-        // 7. Sort
+        // Sorting
         filtered.sort((a, b) => {
             if (sortBy === "dueDate-asc") return (a.dueDate || "9999") > (b.dueDate || "9999") ? 1 : -1;
-            if (sortBy === "dueDate-desc") return (a.dueDate || "0000") < (b.dueDate || "0000") ? 1 : -1;
             if (sortBy === "priority-desc") {
-                const map = { high: 3, medium: 2, low: 1 };
+                const map = { p1: 4, p2: 3, p3: 2, p4: 1 };
                 return (map[b.priority] || 0) - (map[a.priority] || 0);
             }
-            if (sortBy === "created-desc") return new Date(b.createdAt) - new Date(a.createdAt);
             if (sortBy === "title-asc") return a.title.localeCompare(b.title);
+            if (sortBy === "created-desc") return new Date(b.createdAt) - new Date(a.createdAt);
             return 0;
         });
 
-        // Toggle Empty State
-        if (filtered.length === 0) {
-            tasksEmptyState.classList.remove("hidden");
+        const activeList = filtered.filter(t => !t.completed);
+        const completedList = filtered.filter(t => t.completed);
+
+        viewTaskBadge.textContent = `${activeList.length} task${activeList.length === 1 ? "" : "s"}`;
+
+        // Empty state check
+        if (activeList.length === 0 && (currentView === "completed" ? completedList.length === 0 : true)) {
+            emptyState.classList.remove("hidden");
+            if (currentView === "completed") {
+                emptyStateMsg.textContent = "No completed tasks yet. Finish some tasks to see them here!";
+            } else {
+                emptyStateMsg.textContent = "Enjoy your day or capture a new task above.";
+            }
         } else {
-            tasksEmptyState.classList.add("hidden");
+            emptyState.classList.add("hidden");
         }
 
-        filtered.forEach(task => {
-            const item = createTaskElement(task);
-            tasksContainer.appendChild(item);
+        // Render Active Tasks
+        activeList.forEach(task => {
+            const row = createTaskRow(task);
+            activeTasksList.appendChild(row);
         });
+
+        // Render Completed Tasks
+        if (currentView !== "completed" && completedList.length > 0) {
+            completedSection.style.display = "block";
+            completedAccordionCount.textContent = completedList.length;
+            completedList.forEach(task => {
+                const row = createTaskRow(task);
+                completedTasksList.appendChild(row);
+            });
+        } else {
+            completedSection.style.display = "none";
+        }
     }
 
-    function createTaskElement(task) {
+    function createTaskRow(task) {
         const li = document.createElement("li");
-        li.className = `task-item ${task.completed ? "completed" : ""}`;
+        li.className = `task-row ${task.completed ? "completed" : ""}`;
         li.dataset.id = task.id;
 
-        const categoryObj = categories.find(c => c.id === task.category) || { name: "General", color: "#6366f1" };
-        const dueDateFormatted = formatDueDate(task.dueDate);
+        const proj = projects.find(p => p.id === task.project) || { name: "Inbox", color: "#2563eb" };
+        const dueDateInfo = formatDue(task.dueDate);
 
         li.innerHTML = `
-            <div class="task-left">
-                <button class="custom-checkbox" aria-label="Toggle completed">
+            <div class="task-row-left">
+                <button class="check-circle ${task.priority || 'p4'}" aria-label="Complete task">
                     <i class="fa-solid fa-check"></i>
                 </button>
-                <div class="task-info">
-                    <span class="task-title">${escapeHTML(task.title)}</span>
-                    ${task.description ? `<p class="task-description">${escapeHTML(task.description)}</p>` : ""}
-                    <div class="task-meta-tags">
-                        <span class="task-badge badge-category">
-                            <span class="list-dot" style="background-color: ${categoryObj.color};"></span>
-                            ${categoryObj.name}
-                        </span>
-                        <span class="task-badge badge-priority priority-${task.priority}">
-                            ${task.priority.toUpperCase()}
+                <div class="task-content">
+                    <span class="task-text">${escapeHTML(task.title)}</span>
+                    ${task.description ? `<p class="task-desc-text">${escapeHTML(task.description)}</p>` : ""}
+                    <div class="task-chips">
+                        <span class="meta-pill">
+                            <span class="project-dot" style="background-color: ${proj.color}; width: 6px; height: 6px;"></span>
+                            ${proj.name}
                         </span>
                         ${task.dueDate ? `
-                            <span class="task-badge badge-date ${dueDateFormatted.className}">
-                                <i class="fa-regular fa-clock"></i> ${dueDateFormatted.text}
+                            <span class="meta-pill ${dueDateInfo.className}">
+                                <i class="fa-regular fa-calendar" style="font-size: 0.65rem;"></i> ${dueDateInfo.text}
+                            </span>
+                        ` : ""}
+                        ${task.priority && task.priority !== "p4" ? `
+                            <span class="meta-pill priority-${task.priority}">
+                                ${task.priority.toUpperCase()}
                             </span>
                         ` : ""}
                         ${task.tag && task.tag !== "general" ? `
-                            <span class="task-badge badge-category">#${task.tag}</span>
+                            <span class="meta-pill">#${task.tag}</span>
                         ` : ""}
                     </div>
                 </div>
             </div>
-            <div class="task-actions">
-                <button class="action-btn btn-edit" title="Edit Task">
+            <div class="task-row-actions">
+                <button class="row-action-btn btn-star ${task.starred ? "starred" : ""}" title="Star task">
+                    <i class="${task.starred ? "fa-solid fa-star" : "fa-regular fa-star"}"></i>
+                </button>
+                <button class="row-action-btn btn-edit" title="Edit task">
                     <i class="fa-regular fa-pen-to-square"></i>
                 </button>
-                <button class="action-btn btn-delete" title="Delete Task">
+                <button class="row-action-btn btn-delete" title="Delete task">
                     <i class="fa-regular fa-trash-can"></i>
                 </button>
             </div>
         `;
 
-        // Event Listeners for Task
-        const checkbox = li.querySelector(".custom-checkbox");
-        checkbox.addEventListener("click", () => toggleTaskCompleted(task.id));
-
-        const editBtn = li.querySelector(".btn-edit");
-        editBtn.addEventListener("click", () => openEditTaskModal(task.id));
-
-        const deleteBtn = li.querySelector(".btn-delete");
-        deleteBtn.addEventListener("click", () => deleteTask(task.id));
+        // Action Listeners
+        li.querySelector(".check-circle").addEventListener("click", () => toggleTaskComplete(task.id));
+        li.querySelector(".btn-star").addEventListener("click", () => toggleTaskStar(task.id));
+        li.querySelector(".btn-edit").addEventListener("click", () => openEditModal(task.id));
+        li.querySelector(".btn-delete").addEventListener("click", () => deleteTask(task.id));
 
         return li;
     }
 
-    // Render Weekly Schedule Board (Dribbble View)
-    function renderWeeklyScheduleBoard() {
-        weeklyScheduleBoard.innerHTML = "";
+    // ==========================================================================
+    // NOTES WALL
+    // ==========================================================================
 
-        const curr = new Date();
-        const firstDayOfWeek = new Date(curr.setDate(curr.getDate() - curr.getDay() + 1 + (currentWeekOffset * 7)));
-        const todayFormatted = getFormattedDate(0);
-
-        for (let i = 0; i < 7; i++) {
-            const dayDate = new Date(firstDayOfWeek);
-            dayDate.setDate(firstDayOfWeek.getDate() + i);
-
-            const dayString = dayDate.toISOString().split("T")[0];
-            const dayName = dayDate.toLocaleDateString("en-US", { weekday: "short" });
-            const dayNum = dayDate.getDate();
-            const isToday = dayString === todayFormatted;
-
-            const dayTasks = tasks.filter(t => t.dueDate === dayString);
-
-            const col = document.createElement("div");
-            col.className = `schedule-day-column ${isToday ? "is-today-col" : ""}`;
-            col.innerHTML = `
-                <div class="schedule-day-header">
-                    <h4>${dayName}</h4>
-                    <span>${dayNum} ${dayDate.toLocaleDateString("en-US", { month: "short" })}</span>
-                </div>
-                <div class="schedule-day-tasks" id="col-tasks-${dayString}">
-                </div>
-            `;
-
-            const tasksWrapper = col.querySelector(".schedule-day-tasks");
-            if (dayTasks.length === 0) {
-                tasksWrapper.innerHTML = `<span style="font-size: 0.75rem; color: var(--text-muted); text-align: center; margin-top: 1rem;">No tasks</span>`;
-            } else {
-                dayTasks.forEach(task => {
-                    const cat = categories.find(c => c.id === task.category) || { color: "#6366f1" };
-                    const card = document.createElement("div");
-                    card.className = `schedule-task-card ${task.completed ? "completed" : ""}`;
-                    card.style.borderLeftColor = cat.color;
-                    card.innerHTML = `
-                        <strong>${escapeHTML(task.title)}</strong>
-                        <div style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
-                            ${task.priority.toUpperCase()} • ${task.completed ? "Completed" : "In Progress"}
-                        </div>
-                    `;
-                    card.addEventListener("click", () => toggleTaskCompleted(task.id));
-                    tasksWrapper.appendChild(card);
-                });
-            }
-
-            weeklyScheduleBoard.appendChild(col);
-        }
-    }
-
-    // Render Sticky Notes Wall (Uizard View)
-    function renderStickyWall() {
-        stickyNotesGrid.innerHTML = "";
-
-        stickyNotes.forEach(note => {
+    function renderNotes() {
+        notesGrid.innerHTML = "";
+        notes.forEach(note => {
             const card = document.createElement("div");
-            card.className = `sticky-card color-${note.color || "yellow"}`;
+            card.className = "note-card";
             card.innerHTML = `
-                <textarea class="sticky-content" rows="6">${escapeHTML(note.content)}</textarea>
-                <div class="sticky-footer">
+                <textarea class="note-textarea" rows="5">${escapeHTML(note.content)}</textarea>
+                <div class="note-footer">
                     <span>${note.date || "Note"}</span>
-                    <button class="sticky-delete-btn" title="Delete note">
-                        <i class="fa-solid fa-trash-can"></i>
+                    <button class="note-delete-btn" title="Delete note">
+                        <i class="fa-regular fa-trash-can"></i>
                     </button>
                 </div>
             `;
 
-            const textarea = card.querySelector(".sticky-content");
-            textarea.addEventListener("change", () => {
+            const textarea = card.querySelector(".note-textarea");
+            textarea.addEventListener("input", () => {
                 note.content = textarea.value;
-                saveStickyNotes();
+                saveNotes();
             });
 
-            const deleteBtn = card.querySelector(".sticky-delete-btn");
-            deleteBtn.addEventListener("click", () => {
-                stickyNotes = stickyNotes.filter(n => n.id !== note.id);
-                saveStickyNotes();
-                renderStickyWall();
-                renderMetrics();
-                showToast("Sticky note removed");
+            card.querySelector(".note-delete-btn").addEventListener("click", () => {
+                notes = notes.filter(n => n.id !== note.id);
+                saveNotes();
+                renderNotes();
+                renderCounts();
+                showToast("Note removed");
             });
 
-            stickyNotesGrid.appendChild(card);
+            notesGrid.appendChild(card);
         });
     }
 
     // ==========================================================================
-    // TASK CRUD OPERATIONS
+    // TASK CRUD LOGIC
     // ==========================================================================
 
-    function addTask(title, desc = "", category = "cat-work", priority = "medium", dueDate = "", tag = "general") {
+    function addTask(title, desc = "", project = "proj-work", priority = "p2", dueDate = "", tag = "general") {
         if (!title.trim()) return;
 
         const newTask = {
             id: `task-${Date.now()}`,
             title: title.trim(),
             description: desc.trim(),
-            category: category || (categories[0] ? categories[0].id : "cat-work"),
-            priority: priority || "medium",
+            project: project || (projects[0] ? projects[0].id : "proj-work"),
+            priority: priority || "p2",
             dueDate: dueDate || getFormattedDate(0),
             tag: tag || "general",
+            starred: false,
             completed: false,
             createdAt: new Date().toISOString()
         };
@@ -618,25 +504,35 @@ document.addEventListener("DOMContentLoaded", () => {
         tasks.unshift(newTask);
         saveTasks();
         refreshApp();
-        showToast("Task created successfully!");
+        showToast("Task added");
     }
 
-    function toggleTaskCompleted(taskId) {
-        const task = tasks.find(t => t.id === taskId);
+    function toggleTaskComplete(id) {
+        const task = tasks.find(t => t.id === id);
         if (!task) return;
 
         task.completed = !task.completed;
         saveTasks();
         refreshApp();
-        showToast(task.completed ? "Task marked as completed! 🎉" : "Task restored to active");
+        showToast(task.completed ? "Task completed 🎉" : "Task restored");
     }
 
-    function deleteTask(taskId) {
-        const taskIndex = tasks.findIndex(t => t.id === taskId);
-        if (taskIndex === -1) return;
+    function toggleTaskStar(id) {
+        const task = tasks.find(t => t.id === id);
+        if (!task) return;
 
-        lastDeletedTask = tasks[taskIndex];
-        tasks.splice(taskIndex, 1);
+        task.starred = !task.starred;
+        saveTasks();
+        refreshApp();
+        showToast(task.starred ? "Marked as Important ⭐" : "Removed from Important");
+    }
+
+    function deleteTask(id) {
+        const idx = tasks.findIndex(t => t.id === id);
+        if (idx === -1) return;
+
+        lastDeletedTask = tasks[idx];
+        tasks.splice(idx, 1);
         saveTasks();
         refreshApp();
 
@@ -651,114 +547,94 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function openEditTaskModal(taskId) {
-        const task = tasks.find(t => t.id === taskId);
+    function openEditModal(id) {
+        const task = tasks.find(t => t.id === id);
         if (!task) return;
 
-        taskModalTitle.textContent = "Edit Task";
-        taskEditIdInput.value = task.id;
-        modalTaskTitle.value = task.title;
-        modalTaskDesc.value = task.description || "";
-        modalTaskCategory.value = task.category;
-        modalTaskPriority.value = task.priority;
-        modalTaskDate.value = task.dueDate || "";
-        modalTaskTag.value = task.tag || "general";
+        editTaskId.value = task.id;
+        editTitle.value = task.title;
+        editDesc.value = task.description || "";
+        editProject.value = task.project;
+        editPriority.value = task.priority || "p2";
+        editDate.value = task.dueDate || "";
+        editTag.value = task.tag || "general";
 
-        openModal(taskModal);
+        openModal(editModal);
     }
 
-    function saveEditedTask(taskId, title, desc, category, priority, dueDate, tag) {
-        const task = tasks.find(t => t.id === taskId);
+    function saveEditedTask(id, title, desc, project, priority, dueDate, tag) {
+        const task = tasks.find(t => t.id === id);
         if (!task) return;
 
         task.title = title.trim();
         task.description = desc.trim();
-        task.category = category;
+        task.project = project;
         task.priority = priority;
         task.dueDate = dueDate;
         task.tag = tag;
 
         saveTasks();
         refreshApp();
-        showToast("Task updated successfully!");
+        showToast("Task updated");
     }
 
-    // ==========================================================================
-    // CATEGORY & STICKY NOTE OPERATIONS
-    // ==========================================================================
-
-    function addCategory(name, color) {
+    function addProject(name, color) {
         if (!name.trim()) return;
 
-        const newCat = {
-            id: `cat-${Date.now()}`,
+        const newProj = {
+            id: `proj-${Date.now()}`,
             name: name.trim(),
             color: color || "#4f46e5"
         };
 
-        categories.push(newCat);
-        saveCategories();
-        populateCategorySelects();
-        renderSidebarLists();
-        showToast(`Category "${newCat.name}" created!`);
+        projects.push(newProj);
+        saveProjects();
+        populateProjectDropdowns();
+        renderSidebarProjects();
+        showToast(`Project #${newProj.name} created!`);
     }
 
-    function addStickyNote() {
-        const colors = ["yellow", "blue", "pink", "green", "purple", "orange"];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
-
+    function addNote() {
         const newNote = {
-            id: `sticky-${Date.now()}`,
-            content: "New idea or note...",
-            color: randomColor,
+            id: `note-${Date.now()}`,
+            content: "",
             date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })
         };
-
-        stickyNotes.unshift(newNote);
-        saveStickyNotes();
-        renderStickyWall();
-        renderMetrics();
-        showToast("New sticky note added!");
+        notes.unshift(newNote);
+        saveNotes();
+        renderNotes();
+        renderCounts();
+        showToast("New note created");
     }
 
     // ==========================================================================
-    // VIEW SWITCHING & NAVIGATION
+    // VIEW CONTROLS
     // ==========================================================================
 
-    function switchViewPane(paneId) {
-        [paneTasks, paneWeeklySchedule, paneStickyWall].forEach(pane => {
-            pane.classList.remove("active");
-        });
-        const targetPane = document.getElementById(paneId);
-        if (targetPane) targetPane.classList.add("active");
+    function switchPane(paneId) {
+        [paneTasksView, paneNotesView].forEach(p => p.classList.remove("active"));
+        const target = document.getElementById(paneId);
+        if (target) target.classList.add("active");
     }
 
-    function updateNavActiveStates() {
-        document.querySelectorAll(".nav-item").forEach(btn => {
+    function updateNavStates() {
+        document.querySelectorAll(".nav-btn").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.view === currentView);
         });
-        document.querySelectorAll(".list-item-btn").forEach(btn => {
+        document.querySelectorAll(".project-item-btn").forEach(btn => {
             btn.classList.toggle("active", btn.dataset.view === currentView);
         });
     }
-
-    // ==========================================================================
-    // THEME HANDLING
-    // ==========================================================================
 
     function applyTheme(dark) {
         isDarkMode = dark;
         body.classList.toggle("dark-mode", isDarkMode);
-        const icon = themeToggleBtn.querySelector("i");
+        const icon = themeToggle.querySelector("i");
         if (icon) {
             icon.className = isDarkMode ? "fa-solid fa-sun" : "fa-solid fa-moon";
         }
         localStorage.setItem(STORAGE_KEYS.THEME, isDarkMode ? "dark" : "light");
     }
-
-    // ==========================================================================
-    // MODAL HELPERS
-    // ==========================================================================
 
     function openModal(modal) {
         modal.classList.add("active");
@@ -770,31 +646,27 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.setAttribute("aria-hidden", "true");
     }
 
-    // ==========================================================================
-    // TOAST NOTIFICATIONS
-    // ==========================================================================
-
-    function showToast(message, allowUndo = false, undoCallback = null) {
+    function showToast(msg, allowUndo = false, undoCb = null) {
         const toast = document.createElement("div");
         toast.className = "toast";
         toast.innerHTML = `
-            <span>${message}</span>
-            ${allowUndo ? `<button class="btn btn-sm btn-ghost" style="color: #60a5fa; padding: 2px 6px;" id="toast-undo-btn">Undo</button>` : ""}
+            <span>${msg}</span>
+            ${allowUndo ? `<button class="btn btn-sm" style="color: #60a5fa; padding: 2px 4px;" id="toast-undo">Undo</button>` : ""}
         `;
 
-        if (allowUndo && undoCallback) {
-            toast.querySelector("#toast-undo-btn").addEventListener("click", () => {
-                undoCallback();
+        if (allowUndo && undoCb) {
+            toast.querySelector("#toast-undo").addEventListener("click", () => {
+                undoCb();
                 toast.remove();
             });
         }
 
-        toastContainer.appendChild(toast);
+        toastBox.appendChild(toast);
 
         setTimeout(() => {
-            toast.classList.add("toast-exit");
-            setTimeout(() => toast.remove(), 300);
-        }, 3500);
+            toast.classList.add("toast-out");
+            setTimeout(() => toast.remove(), 250);
+        }, 3200);
     }
 
     // ==========================================================================
@@ -803,169 +675,129 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function setupEventListeners() {
         // Theme Toggle
-        themeToggleBtn.addEventListener("click", () => {
-            applyTheme(!isDarkMode);
-        });
+        themeToggle.addEventListener("click", () => applyTheme(!isDarkMode));
 
         // Global Search
-        globalSearchInput.addEventListener("input", (e) => {
+        globalSearch.addEventListener("input", (e) => {
             searchQuery = e.target.value;
             renderTasks();
         });
 
-        // Quick Add Task
-        quickAddBtn.addEventListener("click", handleQuickAdd);
-        quickTaskInput.addEventListener("keydown", (e) => {
-            if (e.key === "Enter") handleQuickAdd();
+        // Quick Add Focus
+        sidebarAddBtn.addEventListener("click", () => {
+            taskInputTitle.focus();
+            window.scrollTo({ top: 0, behavior: "smooth" });
         });
 
-        function handleQuickAdd() {
-            const title = quickTaskInput.value;
+        // Inline Add Task
+        submitInlineAdd.addEventListener("click", handleInlineAdd);
+        taskInputTitle.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") handleInlineAdd();
+        });
+
+        cancelInlineAdd.addEventListener("click", () => {
+            taskInputTitle.value = "";
+            taskInputDesc.value = "";
+        });
+
+        function handleInlineAdd() {
+            const title = taskInputTitle.value;
             if (!title.trim()) return;
+
             addTask(
                 title,
-                "",
-                quickTaskCategory.value,
-                quickTaskPriority.value,
-                quickTaskDate.value || getFormattedDate(0),
-                "general"
+                taskInputDesc.value,
+                taskInputProject.value,
+                taskInputPriority.value,
+                taskInputDate.value || getFormattedDate(0),
+                taskInputTag.value
             );
-            quickTaskInput.value = "";
+
+            taskInputTitle.value = "";
+            taskInputDesc.value = "";
+            taskInputTitle.focus();
         }
 
-        // Navigation Menu Buttons
-        document.querySelectorAll(".nav-item").forEach(item => {
-            item.addEventListener("click", () => {
-                const view = item.dataset.view;
-                currentView = view;
-                selectedCalendarDate = null;
-                updateNavActiveStates();
+        // Nav Buttons (Inbox, Today, Upcoming, Starred, Completed, Notes)
+        document.querySelectorAll(".nav-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                currentView = btn.dataset.view;
+                updateNavStates();
 
-                if (view === "calendar") {
-                    switchViewPane("pane-weekly-schedule");
-                } else if (view === "sticky") {
-                    switchViewPane("pane-sticky-wall");
+                if (currentView === "notes") {
+                    switchPane("pane-notes-view");
                 } else {
-                    switchViewPane("pane-tasks");
+                    switchPane("pane-tasks-view");
                 }
 
-                // Close mobile sidebar if open
                 sidebar.classList.remove("open");
                 sidebarBackdrop.classList.remove("active");
-
                 refreshApp();
             });
         });
 
-        // Status Tabs (All, Active, Done)
-        document.querySelectorAll(".status-tab").forEach(tab => {
-            tab.addEventListener("click", () => {
-                document.querySelectorAll(".status-tab").forEach(t => t.classList.remove("active"));
-                tab.classList.add("active");
-                currentStatusFilter = tab.dataset.status;
+        // Tags Filter
+        tagsList.querySelectorAll(".tag-chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                tagsList.querySelectorAll(".tag-chip").forEach(c => c.classList.remove("active"));
+                chip.classList.add("active");
+                currentTagFilter = chip.dataset.tag;
                 renderTasks();
             });
         });
 
-        // Tag Pills Filter
-        sidebarTags.querySelectorAll(".tag-pill").forEach(pill => {
-            pill.addEventListener("click", () => {
-                sidebarTags.querySelectorAll(".tag-pill").forEach(p => p.classList.remove("active"));
-                pill.classList.add("active");
-                currentTagFilter = pill.dataset.tag;
-                renderTasks();
-            });
-        });
-
-        // Priority Filter Dropdown
-        priorityFilterSelect.addEventListener("change", (e) => {
+        // Priority Dropdown Filter
+        priorityFilter.addEventListener("change", (e) => {
             currentPriorityFilter = e.target.value;
             renderTasks();
         });
 
-        // Sort Select
-        tasksSortSelect.addEventListener("change", (e) => {
+        // Sort Filter
+        sortFilter.addEventListener("change", (e) => {
             sortBy = e.target.value;
             renderTasks();
         });
 
-        // Weekly Strip Navigation
-        calPrevWeekBtn.addEventListener("click", () => {
-            currentWeekOffset--;
-            renderWeeklyCalendarStrip();
-            renderWeeklyScheduleBoard();
+        // Completed Accordion Toggle
+        completedToggleBtn.addEventListener("click", () => {
+            isCompletedAccordionOpen = !isCompletedAccordionOpen;
+            completedTasksList.classList.toggle("hidden", !isCompletedAccordionOpen);
+            completedToggleArrow.classList.toggle("open", isCompletedAccordionOpen);
         });
 
-        calNextWeekBtn.addEventListener("click", () => {
-            currentWeekOffset++;
-            renderWeeklyCalendarStrip();
-            renderWeeklyScheduleBoard();
-        });
+        // Notes Wall
+        btnAddNote.addEventListener("click", addNote);
 
-        calGoTodayBtn.addEventListener("click", () => {
-            currentWeekOffset = 0;
-            selectedCalendarDate = getFormattedDate(0);
-            renderWeeklyCalendarStrip();
-            renderWeeklyScheduleBoard();
-            renderTasks();
-        });
-
-        // Modal Open / Close
-        openNewTaskModalBtn.addEventListener("click", () => {
-            taskModalTitle.textContent = "Create New Task";
-            taskEditIdInput.value = "";
-            taskForm.reset();
-            modalTaskDate.value = getFormattedDate(0);
-            openModal(taskModal);
-        });
-
-        emptyStateAddBtn.addEventListener("click", () => {
-            taskModalTitle.textContent = "Create New Task";
-            taskEditIdInput.value = "";
-            taskForm.reset();
-            modalTaskDate.value = getFormattedDate(0);
-            openModal(taskModal);
-        });
-
-        taskModalCloseBtn.addEventListener("click", () => closeModal(taskModal));
-        taskModalCancelBtn.addEventListener("click", () => closeModal(taskModal));
-
-        // Task Form Submit (Create / Edit)
-        taskForm.addEventListener("submit", (e) => {
+        // Edit Modal Submit
+        editTaskForm.addEventListener("submit", (e) => {
             e.preventDefault();
-            const editId = taskEditIdInput.value;
-            const title = modalTaskTitle.value;
-            const desc = modalTaskDesc.value;
-            const cat = modalTaskCategory.value;
-            const priority = modalTaskPriority.value;
-            const date = modalTaskDate.value;
-            const tag = modalTaskTag.value;
-
-            if (editId) {
-                saveEditedTask(editId, title, desc, cat, priority, date, tag);
-            } else {
-                addTask(title, desc, cat, priority, date, tag);
-            }
-
-            closeModal(taskModal);
+            saveEditedTask(
+                editTaskId.value,
+                editTitle.value,
+                editDesc.value,
+                editProject.value,
+                editPriority.value,
+                editDate.value,
+                editTag.value
+            );
+            closeModal(editModal);
         });
 
-        // Add Category / List Modal
-        openAddListModalBtn.addEventListener("click", () => openModal(listModal));
-        listModalCloseBtn.addEventListener("click", () => closeModal(listModal));
-        listModalCancelBtn.addEventListener("click", () => closeModal(listModal));
+        editModalClose.addEventListener("click", () => closeModal(editModal));
+        editModalCancel.addEventListener("click", () => closeModal(editModal));
 
-        listForm.addEventListener("submit", (e) => {
+        // Add Project Modal Submit
+        btnAddProject.addEventListener("click", () => openModal(projectModal));
+        projectModalClose.addEventListener("click", () => closeModal(projectModal));
+        projectModalCancel.addEventListener("click", () => closeModal(projectModal));
+
+        projectForm.addEventListener("submit", (e) => {
             e.preventDefault();
-            const name = modalListName.value;
-            const color = listForm.querySelector("input[name='list-color']:checked").value;
-            addCategory(name, color);
-            modalListName.value = "";
-            closeModal(listModal);
+            const color = projectForm.querySelector("input[name='proj-color']:checked").value;
+            addProject(projectName.value, color);
+            projectName.value = "";
+            closeModal(projectModal);
         });
-
-        // Sticky Wall Action
-        addStickyNoteBtn.addEventListener("click", addStickyNote);
 
         // Mobile Sidebar Controls
         mobileSidebarToggle.addEventListener("click", () => {
@@ -983,40 +815,38 @@ document.addEventListener("DOMContentLoaded", () => {
             sidebarBackdrop.classList.remove("active");
         });
 
-        // Keyboard Shortcuts
+        // Global Keyboard Shortcuts
         window.addEventListener("keydown", (e) => {
-            // '/' key to focus search if not in an input
             if (e.key === "/" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
                 e.preventDefault();
-                globalSearchInput.focus();
+                globalSearch.focus();
             }
-            // Escape to close open modals
+            if ((e.key === "n" || e.key === "N") && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
+                e.preventDefault();
+                taskInputTitle.focus();
+            }
             if (e.key === "Escape") {
-                closeModal(taskModal);
-                closeModal(listModal);
+                closeModal(editModal);
+                closeModal(projectModal);
             }
         });
     }
 
     // ==========================================================================
-    // PERSISTENCE HELPERS
+    // PERSISTENCE & HELPERS
     // ==========================================================================
 
     function saveTasks() {
         localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks));
     }
 
-    function saveCategories() {
-        localStorage.setItem(STORAGE_KEYS.CATEGORIES, JSON.stringify(categories));
+    function saveProjects() {
+        localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects));
     }
 
-    function saveStickyNotes() {
-        localStorage.setItem(STORAGE_KEYS.STICKY_NOTES, JSON.stringify(stickyNotes));
+    function saveNotes() {
+        localStorage.setItem(STORAGE_KEYS.NOTES, JSON.stringify(notes));
     }
-
-    // ==========================================================================
-    // UTILITY FUNCTIONS
-    // ==========================================================================
 
     function getFormattedDate(offsetDays = 0) {
         const d = new Date();
@@ -1024,9 +854,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return d.toISOString().split("T")[0];
     }
 
-    function formatDueDate(dateStr) {
-        if (!dateStr) return { text: "No date", className: "" };
-
+    function formatDue(dateStr) {
+        if (!dateStr) return { text: "", className: "" };
         const today = getFormattedDate(0);
         const tomorrow = getFormattedDate(1);
 
@@ -1038,17 +867,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return { text: "Tomorrow", className: "" };
         } else {
             const d = new Date(dateStr + "T00:00:00");
-            const formatted = d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-            return { text: formatted, className: "" };
+            return { text: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }), className: "" };
         }
-    }
-
-    function getWeekNumber(date) {
-        const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-        const dayNum = d.getUTCDay() || 7;
-        d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-        const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-        return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     }
 
     function escapeHTML(str) {
@@ -1061,6 +881,5 @@ document.addEventListener("DOMContentLoaded", () => {
             .replace(/'/g, "&#039;");
     }
 
-    // Start App
     init();
 });
