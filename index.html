@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Taskflow — Minimalist Task Manager</title>
+    <title>Taskflow — Modern & Visual Task Manager</title>
     
-    <!-- Fonts -->
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -17,20 +17,24 @@
     <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
+    <!-- Ambient Background Glows -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+
     <div class="app-container">
         <!-- Sidebar Backdrop for Mobile -->
         <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
 
-        <!-- Minimalist Left Sidebar -->
+        <!-- Left Sidebar Navigation -->
         <aside class="sidebar" id="sidebar">
             <div class="sidebar-top">
                 <div class="brand">
                     <div class="brand-logo">
-                        <i class="fa-solid fa-check-double"></i>
+                        <i class="fa-solid fa-layer-group"></i>
                     </div>
                     <div class="brand-info">
                         <h2>Taskflow</h2>
-                        <span class="user-status">My Workspace</span>
+                        <span class="user-status"><i class="fa-solid fa-sparkles"></i> Pro Workspace</span>
                     </div>
                 </div>
                 <button class="icon-btn mobile-close-btn" id="mobile-sidebar-close" aria-label="Close sidebar">
@@ -38,10 +42,12 @@
                 </button>
             </div>
 
-            <!-- Primary Quick Add Button -->
+            <!-- Quick Add Button -->
             <button class="sidebar-add-btn" id="sidebar-quick-add-btn">
-                <i class="fa-solid fa-plus"></i>
-                <span>Add task</span>
+                <div class="add-btn-left">
+                    <i class="fa-solid fa-circle-plus"></i>
+                    <span>Create Task</span>
+                </div>
                 <kbd class="shortcut-badge">N</kbd>
             </button>
 
@@ -51,49 +57,61 @@
                 <input type="text" id="global-search" placeholder="Search tasks... ( / )" />
             </div>
 
-            <!-- Navigation / Smart Views -->
+            <!-- Smart Views Navigation -->
             <div class="nav-group">
-                <div class="group-title">VIEWS</div>
+                <div class="group-title">SMART VIEWS</div>
                 <nav class="nav-list">
-                    <button class="nav-btn" data-view="inbox">
-                        <span class="nav-btn-left">
-                            <i class="fa-solid fa-inbox nav-icon icon-inbox"></i>
-                            <span>Inbox</span>
-                        </span>
-                        <span class="nav-count" id="count-inbox">0</span>
-                    </button>
                     <button class="nav-btn active" data-view="today">
                         <span class="nav-btn-left">
-                            <i class="fa-regular fa-calendar-check nav-icon icon-today"></i>
+                            <span class="nav-icon-wrapper icon-today-bg">
+                                <i class="fa-regular fa-sun nav-icon icon-today"></i>
+                            </span>
                             <span>Today</span>
                         </span>
                         <span class="nav-count" id="count-today">0</span>
                     </button>
                     <button class="nav-btn" data-view="upcoming">
                         <span class="nav-btn-left">
-                            <i class="fa-regular fa-calendar-days nav-icon icon-upcoming"></i>
+                            <span class="nav-icon-wrapper icon-upcoming-bg">
+                                <i class="fa-regular fa-calendar-days nav-icon icon-upcoming"></i>
+                            </span>
                             <span>Upcoming</span>
                         </span>
                         <span class="nav-count" id="count-upcoming">0</span>
                     </button>
                     <button class="nav-btn" data-view="starred">
                         <span class="nav-btn-left">
-                            <i class="fa-regular fa-star nav-icon icon-starred"></i>
+                            <span class="nav-icon-wrapper icon-starred-bg">
+                                <i class="fa-solid fa-star nav-icon icon-starred"></i>
+                            </span>
                             <span>Important</span>
                         </span>
                         <span class="nav-count" id="count-starred">0</span>
                     </button>
+                    <button class="nav-btn" data-view="inbox">
+                        <span class="nav-btn-left">
+                            <span class="nav-icon-wrapper icon-inbox-bg">
+                                <i class="fa-solid fa-inbox nav-icon icon-inbox"></i>
+                            </span>
+                            <span>Inbox</span>
+                        </span>
+                        <span class="nav-count" id="count-inbox">0</span>
+                    </button>
                     <button class="nav-btn" data-view="completed">
                         <span class="nav-btn-left">
-                            <i class="fa-regular fa-circle-check nav-icon icon-completed"></i>
+                            <span class="nav-icon-wrapper icon-completed-bg">
+                                <i class="fa-regular fa-circle-check nav-icon icon-completed"></i>
+                            </span>
                             <span>Completed</span>
                         </span>
                         <span class="nav-count" id="count-completed">0</span>
                     </button>
                     <button class="nav-btn" data-view="notes">
                         <span class="nav-btn-left">
-                            <i class="fa-regular fa-note-sticky nav-icon icon-notes"></i>
-                            <span>Quick Notes</span>
+                            <span class="nav-icon-wrapper icon-notes-bg">
+                                <i class="fa-regular fa-note-sticky nav-icon icon-notes"></i>
+                            </span>
+                            <span>Idea Board</span>
                         </span>
                         <span class="nav-count" id="count-notes">0</span>
                     </button>
@@ -103,7 +121,7 @@
             <!-- Projects Section -->
             <div class="nav-group">
                 <div class="group-header">
-                    <span class="group-title">PROJECTS</span>
+                    <span class="group-title">PROJECTS & LISTS</span>
                     <button class="icon-btn-xs" id="btn-add-project" title="Add project">
                         <i class="fa-solid fa-plus"></i>
                     </button>
@@ -125,20 +143,25 @@
                 </div>
             </div>
 
-            <!-- Sidebar Bottom / Footer -->
+            <!-- Sidebar Footer -->
             <div class="sidebar-bottom">
-                <div class="progress-widget">
-                    <div class="progress-info">
-                        <span>Daily Progress</span>
-                        <strong id="progress-text">0%</strong>
+                <div class="streak-card">
+                    <div class="streak-icon">
+                        <i class="fa-solid fa-fire"></i>
                     </div>
-                    <div class="progress-track">
-                        <div class="progress-fill" id="progress-fill"></div>
+                    <div class="streak-info">
+                        <strong>5 Day Streak</strong>
+                        <small>Keep up the momentum!</small>
                     </div>
                 </div>
 
                 <div class="footer-controls">
-                    <span class="storage-tag"><i class="fa-solid fa-shield-halved"></i> Local Sync</span>
+                    <div class="user-chip">
+                        <div class="user-avatar">
+                            <i class="fa-solid fa-user-check"></i>
+                        </div>
+                        <span>Local Synced</span>
+                    </div>
                     <button class="theme-btn" id="theme-toggle" title="Toggle dark/light mode">
                         <i class="fa-solid fa-moon"></i>
                     </button>
@@ -148,54 +171,110 @@
 
         <!-- Main Task Workspace -->
         <main class="main-workspace">
-            <!-- Workspace Header -->
-            <header class="workspace-header">
-                <div class="header-left">
+            <!-- Top Action Header -->
+            <div class="workspace-top-bar">
+                <div class="top-bar-left">
                     <button class="icon-btn mobile-menu-btn" id="mobile-sidebar-toggle" aria-label="Toggle menu">
                         <i class="fa-solid fa-bars"></i>
                     </button>
-                    <div>
-                        <div class="view-title-row">
-                            <h1 id="view-title">Today</h1>
-                            <span class="view-task-badge" id="view-task-badge">0 tasks</span>
+                    <div class="date-chip">
+                        <i class="fa-regular fa-calendar"></i>
+                        <span id="header-date-text">Saturday, 22 August</span>
+                    </div>
+                </div>
+
+                <div class="top-bar-right">
+                    <select id="priority-filter" class="clean-select" aria-label="Filter by priority">
+                        <option value="all">⚡ All Priorities</option>
+                        <option value="p1">🔴 P1 High</option>
+                        <option value="p2">🟡 P2 Medium</option>
+                        <option value="p3">🔵 P3 Low</option>
+                        <option value="p4">⚪ P4 Routine</option>
+                    </select>
+
+                    <select id="sort-filter" class="clean-select" aria-label="Sort tasks">
+                        <option value="dueDate-asc">📅 Due Date</option>
+                        <option value="priority-desc">🔥 Priority</option>
+                        <option value="title-asc">🔤 Alphabetical</option>
+                        <option value="created-desc">🕒 Date Added</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Visual Hero Banner & Daily Progress Card -->
+            <section class="hero-banner" id="hero-banner">
+                <div class="hero-content">
+                    <div class="hero-greeting">
+                        <span class="greeting-badge" id="greeting-badge">✨ Daily Overview</span>
+                        <h1 id="hero-greeting-text">Good Evening, Elesh!</h1>
+                        <p class="hero-quote" id="hero-quote">"Focus on progress, not perfection. You've got this!"</p>
+                    </div>
+
+                    <div class="hero-meta-row">
+                        <div class="hero-stat-pill">
+                            <i class="fa-solid fa-list-check"></i>
+                            <span id="hero-stat-active">0 Active</span>
                         </div>
-                        <p class="view-subtitle" id="view-subtitle">Saturday, 22 August</p>
+                        <div class="hero-stat-pill">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span id="hero-stat-done">0 Done</span>
+                        </div>
+                        <div class="hero-stat-pill">
+                            <i class="fa-solid fa-bolt"></i>
+                            <span id="hero-stat-status">On Track</span>
+                        </div>
                     </div>
                 </div>
 
-                <div class="header-right">
-                    <!-- Filter & Sort Options -->
-                    <div class="header-filter-group">
-                        <select id="priority-filter" class="clean-select" aria-label="Filter by priority">
-                            <option value="all">All Priorities</option>
-                            <option value="p1">🔴 P1 High</option>
-                            <option value="p2">🟡 P2 Medium</option>
-                            <option value="p3">🔵 P3 Low</option>
-                            <option value="p4">⚪ P4 Routine</option>
-                        </select>
-
-                        <select id="sort-filter" class="clean-select" aria-label="Sort tasks">
-                            <option value="dueDate-asc">Due Date</option>
-                            <option value="priority-desc">Priority</option>
-                            <option value="title-asc">Alphabetical</option>
-                            <option value="created-desc">Date Added</option>
-                        </select>
+                <!-- Radial Progress Ring -->
+                <div class="hero-progress-wrapper">
+                    <div class="radial-ring-box">
+                        <svg class="radial-progress-svg" viewBox="0 0 100 100">
+                            <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
+                            <circle class="ring-fill" id="ring-fill" cx="50" cy="50" r="42"></circle>
+                        </svg>
+                        <div class="ring-center-text">
+                            <strong id="ring-percent">0%</strong>
+                            <span>Done</span>
+                        </div>
                     </div>
                 </div>
-            </header>
+            </section>
+
+            <!-- Projects & Focus Visual Cards Row -->
+            <section class="focus-projects-section" id="focus-projects-section">
+                <div class="section-title-row">
+                    <div class="title-with-icon">
+                        <i class="fa-solid fa-chart-pie section-icon"></i>
+                        <h3>Active Projects & Focus</h3>
+                    </div>
+                    <span class="section-hint">Overview of ongoing areas</span>
+                </div>
+                <div class="focus-cards-grid" id="focus-cards-grid">
+                    <!-- Project Cards rendered dynamically via JS -->
+                </div>
+            </section>
 
             <!-- Active View: Tasks Pane -->
             <div class="content-pane active" id="pane-tasks-view">
-                <!-- Todoist-Style Inline Task Add Box -->
+                <!-- Section Header for Current View -->
+                <div class="view-header-row">
+                    <div class="view-title-wrap">
+                        <h2 id="view-title">Today's Tasks</h2>
+                        <span class="view-badge-pill" id="view-task-badge">0 tasks</span>
+                    </div>
+                </div>
+
+                <!-- Inline Task Add Box (Todoist-Style) -->
                 <div class="inline-task-creator" id="inline-creator">
                     <div class="creator-input-row">
                         <div class="circle-placeholder">
                             <i class="fa-solid fa-plus"></i>
                         </div>
-                        <input type="text" id="task-input-title" placeholder="Add a task... (Press Enter to save)" />
+                        <input type="text" id="task-input-title" placeholder="Add a task... Press Enter to quickly add" />
                     </div>
                     <div class="creator-details-row" id="creator-details">
-                        <input type="text" id="task-input-desc" placeholder="Description or notes (optional)..." />
+                        <input type="text" id="task-input-desc" placeholder="Add description or notes (optional)..." />
                         <div class="creator-chips-row">
                             <div class="chip-group">
                                 <input type="date" id="task-input-date" class="chip-date-input" title="Due Date" />
@@ -221,7 +300,9 @@
                             </div>
                             <div class="creator-actions">
                                 <button type="button" class="btn btn-text" id="cancel-inline-add">Clear</button>
-                                <button type="button" class="btn btn-primary btn-sm" id="submit-inline-add">Add Task</button>
+                                <button type="button" class="btn btn-primary btn-sm" id="submit-inline-add">
+                                    <i class="fa-solid fa-plus"></i> Add Task
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -231,11 +312,11 @@
                 <div class="tasks-container">
                     <!-- Empty State -->
                     <div class="empty-state hidden" id="empty-state">
-                        <div class="empty-icon">
-                            <i class="fa-regular fa-circle-check"></i>
+                        <div class="empty-illustration-box">
+                            <i class="fa-solid fa-sparkles"></i>
                         </div>
                         <h3>All tasks complete!</h3>
-                        <p id="empty-state-msg">Enjoy your day or add a new task to stay ahead.</p>
+                        <p id="empty-state-msg">Great job! Enjoy your time or capture a new task above.</p>
                     </div>
 
                     <!-- Active Task List -->
@@ -247,7 +328,7 @@
                     <div class="completed-section" id="completed-section">
                         <button class="completed-toggle-btn" id="completed-toggle-btn">
                             <i class="fa-solid fa-chevron-right toggle-arrow" id="completed-toggle-arrow"></i>
-                            <span>Completed (<span id="completed-accordion-count">0</span>)</span>
+                            <span>Completed Archive (<span id="completed-accordion-count">0</span>)</span>
                         </button>
                         <ul class="task-list completed-list hidden" id="completed-tasks-list">
                             <!-- Rendered dynamically -->
@@ -260,8 +341,8 @@
             <div class="content-pane" id="pane-notes-view">
                 <div class="notes-header">
                     <div>
-                        <h2>Quick Notes & Brain Dump</h2>
-                        <p>Jot down thoughts, temporary reminders, and drafts.</p>
+                        <h2>Idea Board & Quick Notes</h2>
+                        <p>Capture thoughts, drafts, and inspirations in one place.</p>
                     </div>
                     <button class="btn btn-primary btn-sm" id="btn-add-note">
                         <i class="fa-solid fa-plus"></i> New Note
@@ -341,7 +422,7 @@
     <div class="modal-overlay" id="project-modal" aria-hidden="true">
         <div class="modal-card modal-sm">
             <div class="modal-header">
-                <h3>New Project</h3>
+                <h3>Create New Project</h3>
                 <button class="icon-btn modal-close-btn" id="project-modal-close">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
@@ -349,49 +430,49 @@
             <form id="project-form" class="modal-form">
                 <div class="form-group">
                     <label for="project-name">Project Name <span class="req">*</span></label>
-                    <input type="text" id="project-name" placeholder="e.g. Side Project, Fitness" required />
+                    <input type="text" id="project-name" placeholder="e.g. Mobile App, Gym & Health" required />
                 </div>
                 <div class="form-group">
-                    <label>Color</label>
+                    <label>Choose Project Theme Color</label>
                     <div class="color-options">
                         <label class="color-dot-label">
-                            <input type="radio" name="proj-color" value="#ef4444" checked />
-                            <span class="color-dot" style="background-color: #ef4444;"></span>
-                        </label>
-                        <label class="color-dot-label">
-                            <input type="radio" name="proj-color" value="#f59e0b" />
-                            <span class="color-dot" style="background-color: #f59e0b;"></span>
-                        </label>
-                        <label class="color-dot-label">
-                            <input type="radio" name="proj-color" value="#10b981" />
-                            <span class="color-dot" style="background-color: #10b981;"></span>
+                            <input type="radio" name="proj-color" value="#6366f1" checked />
+                            <span class="color-dot" style="background-color: #6366f1;"></span>
                         </label>
                         <label class="color-dot-label">
                             <input type="radio" name="proj-color" value="#06b6d4" />
                             <span class="color-dot" style="background-color: #06b6d4;"></span>
                         </label>
                         <label class="color-dot-label">
-                            <input type="radio" name="proj-color" value="#4f46e5" />
-                            <span class="color-dot" style="background-color: #4f46e5;"></span>
+                            <input type="radio" name="proj-color" value="#10b981" />
+                            <span class="color-dot" style="background-color: #10b981;"></span>
+                        </label>
+                        <label class="color-dot-label">
+                            <input type="radio" name="proj-color" value="#f59e0b" />
+                            <span class="color-dot" style="background-color: #f59e0b;"></span>
                         </label>
                         <label class="color-dot-label">
                             <input type="radio" name="proj-color" value="#ec4899" />
                             <span class="color-dot" style="background-color: #ec4899;"></span>
                         </label>
+                        <label class="color-dot-label">
+                            <input type="radio" name="proj-color" value="#ef4444" />
+                            <span class="color-dot" style="background-color: #ef4444;"></span>
+                        </label>
                     </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-text" id="project-modal-cancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary">Create</button>
+                    <button type="submit" class="btn btn-primary">Create Project</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Toast Notification Container -->
+    <!-- Toast Container -->
     <div class="toast-box" id="toast-box"></div>
 
-    <!-- Script -->
+    <!-- Main JavaScript -->
     <script src="script.js"></script>
 </body>
 </html>

@@ -1,6 +1,6 @@
 /**
- * Taskflow — Minimalist Modern Task Manager
- * Clean, distraction-free task management inspired by Todoist & Apple Reminders.
+ * Taskflow — Modern & Visual Task Management Dashboard
+ * Dynamic greetings, radial progress ring, project focus cards, and full CRUD.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -9,17 +9,17 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================================================
 
     const STORAGE_KEYS = {
-        TASKS: "taskflow_min_tasks",
-        PROJECTS: "taskflow_min_projects",
-        NOTES: "taskflow_min_notes",
-        THEME: "taskflow_min_theme",
+        TASKS: "taskflow_vis_tasks",
+        PROJECTS: "taskflow_vis_projects",
+        NOTES: "taskflow_vis_notes",
+        THEME: "taskflow_vis_theme",
     };
 
     const defaultProjects = [
-        { id: "proj-work", name: "Work", color: "#4f46e5" },
-        { id: "proj-personal", name: "Personal", color: "#06b6d4" },
-        { id: "proj-learning", name: "Learning", color: "#10b981" },
-        { id: "proj-side", name: "Side Projects", color: "#f59e0b" }
+        { id: "proj-work", name: "Work & Career", color: "#6366f1", icon: "fa-briefcase" },
+        { id: "proj-learning", name: "Learning & Code", color: "#10b981", icon: "fa-code" },
+        { id: "proj-personal", name: "Personal Life", color: "#06b6d4", icon: "fa-user" },
+        { id: "proj-side", name: "Side Projects", color: "#f59e0b", icon: "fa-rocket" }
     ];
 
     const defaultTasks = [
@@ -37,13 +37,13 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             id: "task-2",
-            title: "Review JavaScript async/await patterns",
-            description: "Practice promises, Promise.allSettled, and microtask queues.",
+            title: "Practice modern UI design and CSS custom properties",
+            description: "Build clean card components, glassmorphic glows, and responsive grids.",
             project: "proj-learning",
             priority: "p2",
             dueDate: getFormattedDate(0), // Today
             tag: "dev",
-            starred: false,
+            starred: true,
             completed: false,
             createdAt: new Date().toISOString()
         },
@@ -61,13 +61,13 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             id: "task-4",
-            title: "Refactor CSS styling to modern custom variables",
-            description: "Clean up unused classes and verify mobile breakpoints.",
+            title: "Refactor task dashboard architecture & localStorage sync",
+            description: "Verify state management and add undo toast notifications.",
             project: "proj-side",
             priority: "p2",
             dueDate: getFormattedDate(2),
             tag: "design",
-            starred: true,
+            starred: false,
             completed: true,
             createdAt: new Date().toISOString()
         }
@@ -76,13 +76,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const defaultNotes = [
         {
             id: "note-1",
-            content: "💡 Project Idea: Build a lightweight habit tracker with minimalist streak counters.",
+            content: "💡 Project Idea: Build a lightweight habit tracker with visual streak counters.",
             date: "Today"
         },
         {
             id: "note-2",
             content: "📌 Books to read: Refactoring UI, Clean Code, Atomic Habits.",
             date: "Aug 22"
+        },
+        {
+            id: "note-3",
+            content: "✨ Modern Design Tip: Subtle background glows make interfaces feel alive and elevated.",
+            date: "Aug 21"
         }
     ];
 
@@ -112,6 +117,19 @@ document.addEventListener("DOMContentLoaded", () => {
     const projectsList = document.getElementById("projects-list");
     const tagsList = document.getElementById("tags-list");
 
+    // Header & Hero Elements
+    const headerDateText = document.getElementById("header-date-text");
+    const heroGreetingText = document.getElementById("hero-greeting-text");
+    const heroQuote = document.getElementById("hero-quote");
+    const heroStatActive = document.getElementById("hero-stat-active");
+    const heroStatDone = document.getElementById("hero-stat-done");
+    const heroStatStatus = document.getElementById("hero-stat-status");
+    const ringFill = document.getElementById("ring-fill");
+    const ringPercent = document.getElementById("ring-percent");
+
+    // Focus Cards Grid
+    const focusCardsGrid = document.getElementById("focus-cards-grid");
+
     // Counters
     const countInbox = document.getElementById("count-inbox");
     const countToday = document.getElementById("count-today");
@@ -119,12 +137,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const countStarred = document.getElementById("count-starred");
     const countCompleted = document.getElementById("count-completed");
     const countNotes = document.getElementById("count-notes");
-    const progressText = document.getElementById("progress-text");
-    const progressFill = document.getElementById("progress-fill");
 
     // Main Header
     const viewTitle = document.getElementById("view-title");
-    const viewSubtitle = document.getElementById("view-subtitle");
     const viewTaskBadge = document.getElementById("view-task-badge");
     const priorityFilter = document.getElementById("priority-filter");
     const sortFilter = document.getElementById("sort-filter");
@@ -201,35 +216,115 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function refreshApp() {
         renderSidebarProjects();
+        renderHeroBanner();
+        renderFocusCards();
         renderCounts();
         renderHeader();
         renderTasks();
         renderNotes();
     }
 
-    function renderHeader() {
-        const todayDate = new Date().toLocaleDateString("en-US", {
+    function renderHeroBanner() {
+        const now = new Date();
+        const hour = now.getHours();
+
+        let greeting = "Good Evening, Elesh! ✨";
+        if (hour < 12) greeting = "Good Morning, Elesh! ☀️";
+        else if (hour < 18) greeting = "Good Afternoon, Elesh! 🌤️";
+
+        heroGreetingText.textContent = greeting;
+
+        const dateStr = now.toLocaleDateString("en-US", {
             weekday: "long",
             day: "numeric",
             month: "long"
         });
-        viewSubtitle.textContent = todayDate;
+        headerDateText.textContent = dateStr;
 
+        // Daily Progress Ring Calculations
+        const todayStr = getFormattedDate(0);
+        const todayTasks = tasks.filter(t => t.dueDate === todayStr);
+        const todayTotal = todayTasks.length;
+        const todayDone = todayTasks.filter(t => t.completed).length;
+        const todayActive = todayTotal - todayDone;
+
+        heroStatActive.textContent = `${todayActive} Active`;
+        heroStatDone.textContent = `${todayDone} Done`;
+
+        const totalTasks = tasks.length;
+        const completedTasks = tasks.filter(t => t.completed).length;
+        const overallPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+        if (overallPercent >= 80) {
+            heroStatStatus.textContent = "🚀 High Velocity";
+        } else if (overallPercent >= 40) {
+            heroStatStatus.textContent = "⚡ On Track";
+        } else {
+            heroStatStatus.textContent = "🌱 Starting Day";
+        }
+
+        // SVG Circle circumference is 2 * PI * 42 ~= 264
+        const circumference = 264;
+        const offset = circumference - (overallPercent / 100) * circumference;
+        ringFill.style.strokeDashoffset = offset;
+        ringPercent.textContent = `${overallPercent}%`;
+    }
+
+    function renderFocusCards() {
+        focusCardsGrid.innerHTML = "";
+
+        projects.forEach(proj => {
+            const projTasks = tasks.filter(t => t.project === proj.id);
+            const total = projTasks.length;
+            const done = projTasks.filter(t => t.completed).length;
+            const percent = total > 0 ? Math.round((done / total) * 100) : 0;
+
+            const card = document.createElement("div");
+            card.className = "focus-card";
+            card.style.setProperty("--card-color", proj.color);
+            card.innerHTML = `
+                <div class="focus-card-top">
+                    <div class="focus-icon-box">
+                        <i class="fa-solid ${proj.icon || 'fa-folder'}"></i>
+                    </div>
+                    <span class="focus-count-badge">${done}/${total} Done</span>
+                </div>
+                <div class="focus-card-body">
+                    <h4>${proj.name}</h4>
+                    <p>${total - done} active tasks</p>
+                    <div class="focus-progress-track">
+                        <div class="focus-progress-bar" style="width: ${percent}%;"></div>
+                    </div>
+                </div>
+            `;
+
+            card.addEventListener("click", () => {
+                currentView = proj.id;
+                switchPane("pane-tasks-view");
+                updateNavStates();
+                refreshApp();
+            });
+
+            focusCardsGrid.appendChild(card);
+        });
+    }
+
+    function renderHeader() {
         if (currentView === "inbox") {
             viewTitle.textContent = "Inbox";
         } else if (currentView === "today") {
-            viewTitle.textContent = "Today";
+            viewTitle.textContent = "Today's Tasks";
         } else if (currentView === "upcoming") {
-            viewTitle.textContent = "Upcoming";
+            viewTitle.textContent = "Upcoming Schedule";
         } else if (currentView === "starred") {
-            viewTitle.textContent = "Important";
+            viewTitle.textContent = "Important & High Priority";
         } else if (currentView === "completed") {
-            viewTitle.textContent = "Completed";
+            viewTitle.textContent = "Completed Archive";
         } else if (currentView === "notes") {
-            viewTitle.textContent = "Quick Notes";
+            viewTitle.textContent = "Idea Board";
         } else {
             const proj = projects.find(p => p.id === currentView);
-            viewTitle.textContent = proj ? proj.name : "Tasks";
+            viewTitle.textContent = proj ? `${proj.name} Tasks` : "Tasks";
         }
     }
 
@@ -273,12 +368,11 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderCounts() {
         const todayStr = getFormattedDate(0);
 
-        const inboxCount = tasks.filter(t => !t.project || t.project === "inbox" && !t.completed).length;
+        const inboxCount = tasks.filter(t => (!t.project || t.project === "inbox") && !t.completed).length;
         const todayCount = tasks.filter(t => t.dueDate === todayStr && !t.completed).length;
         const upcomingCount = tasks.filter(t => t.dueDate > todayStr && !t.completed).length;
         const starredCount = tasks.filter(t => t.starred && !t.completed).length;
         const completedCount = tasks.filter(t => t.completed).length;
-        const total = tasks.length;
 
         countInbox.textContent = inboxCount;
         countToday.textContent = todayCount;
@@ -286,10 +380,6 @@ document.addEventListener("DOMContentLoaded", () => {
         countStarred.textContent = starredCount;
         countCompleted.textContent = completedCount;
         countNotes.textContent = notes.length;
-
-        const rate = total > 0 ? Math.round((completedCount / total) * 100) : 0;
-        progressText.textContent = `${rate}%`;
-        progressFill.style.width = `${rate}%`;
     }
 
     // ==========================================================================
@@ -358,9 +448,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (activeList.length === 0 && (currentView === "completed" ? completedList.length === 0 : true)) {
             emptyState.classList.remove("hidden");
             if (currentView === "completed") {
-                emptyStateMsg.textContent = "No completed tasks yet. Finish some tasks to see them here!";
+                emptyStateMsg.textContent = "No completed tasks yet. Mark tasks done to see them archived here!";
             } else {
-                emptyStateMsg.textContent = "Enjoy your day or capture a new task above.";
+                emptyStateMsg.textContent = "Great job! Enjoy your time or capture a new task above.";
             }
         } else {
             emptyState.classList.add("hidden");
@@ -390,7 +480,9 @@ document.addEventListener("DOMContentLoaded", () => {
         li.className = `task-row ${task.completed ? "completed" : ""}`;
         li.dataset.id = task.id;
 
-        const proj = projects.find(p => p.id === task.project) || { name: "Inbox", color: "#2563eb" };
+        const proj = projects.find(p => p.id === task.project) || { name: "Inbox", color: "#6366f1" };
+        li.style.setProperty("--task-project-color", proj.color);
+
         const dueDateInfo = formatDue(task.dueDate);
 
         li.innerHTML = `
@@ -403,12 +495,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     ${task.description ? `<p class="task-desc-text">${escapeHTML(task.description)}</p>` : ""}
                     <div class="task-chips">
                         <span class="meta-pill">
-                            <span class="project-dot" style="background-color: ${proj.color}; width: 6px; height: 6px;"></span>
+                            <span class="project-dot" style="background-color: ${proj.color};"></span>
                             ${proj.name}
                         </span>
                         ${task.dueDate ? `
                             <span class="meta-pill ${dueDateInfo.className}">
-                                <i class="fa-regular fa-calendar" style="font-size: 0.65rem;"></i> ${dueDateInfo.text}
+                                <i class="fa-regular fa-calendar"></i> ${dueDateInfo.text}
                             </span>
                         ` : ""}
                         ${task.priority && task.priority !== "p4" ? `
@@ -504,7 +596,7 @@ document.addEventListener("DOMContentLoaded", () => {
         tasks.unshift(newTask);
         saveTasks();
         refreshApp();
-        showToast("Task added");
+        showToast("Task added to your list ✨");
     }
 
     function toggleTaskComplete(id) {
@@ -514,7 +606,7 @@ document.addEventListener("DOMContentLoaded", () => {
         task.completed = !task.completed;
         saveTasks();
         refreshApp();
-        showToast(task.completed ? "Task completed 🎉" : "Task restored");
+        showToast(task.completed ? "Task completed! 🎉" : "Task restored to active");
     }
 
     function toggleTaskStar(id) {
@@ -575,22 +667,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
         saveTasks();
         refreshApp();
-        showToast("Task updated");
+        showToast("Task updated successfully!");
     }
 
     function addProject(name, color) {
         if (!name.trim()) return;
 
+        const icons = ["fa-briefcase", "fa-code", "fa-user", "fa-rocket", "fa-palette", "fa-heart"];
+        const randomIcon = icons[Math.floor(Math.random() * icons.length)];
+
         const newProj = {
             id: `proj-${Date.now()}`,
             name: name.trim(),
-            color: color || "#4f46e5"
+            color: color || "#6366f1",
+            icon: randomIcon
         };
 
         projects.push(newProj);
         saveProjects();
         populateProjectDropdowns();
         renderSidebarProjects();
+        renderFocusCards();
         showToast(`Project #${newProj.name} created!`);
     }
 
@@ -608,7 +705,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================================================
-    // VIEW CONTROLS
+    // VIEW CONTROLS & THEME
     // ==========================================================================
 
     function switchPane(paneId) {
@@ -651,7 +748,7 @@ document.addEventListener("DOMContentLoaded", () => {
         toast.className = "toast";
         toast.innerHTML = `
             <span>${msg}</span>
-            ${allowUndo ? `<button class="btn btn-sm" style="color: #60a5fa; padding: 2px 4px;" id="toast-undo">Undo</button>` : ""}
+            ${allowUndo ? `<button class="btn btn-sm" style="color: #818cf8; padding: 2px 4px;" id="toast-undo">Undo</button>` : ""}
         `;
 
         if (allowUndo && undoCb) {
@@ -686,7 +783,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Quick Add Focus
         sidebarAddBtn.addEventListener("click", () => {
             taskInputTitle.focus();
-            window.scrollTo({ top: 0, behavior: "smooth" });
+            window.scrollTo({ top: 320, behavior: "smooth" });
         });
 
         // Inline Add Task
@@ -815,7 +912,7 @@ document.addEventListener("DOMContentLoaded", () => {
             sidebarBackdrop.classList.remove("active");
         });
 
-        // Global Keyboard Shortcuts
+        // Keyboard Shortcuts
         window.addEventListener("keydown", (e) => {
             if (e.key === "/" && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "TEXTAREA") {
                 e.preventDefault();
