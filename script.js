@@ -1687,7 +1687,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ════════════════════════════════════════════════
-     3D ALPINE TOPOGRAPHY & SUMMIT SPARKS BACKGROUND CANVAS
+     ULTRA-MODERN ALPINE AURORA & 3D TOPOGRAPHIC WAVE MOTION
   ════════════════════════════════════════════════ */
   function init3DBackgroundCanvas() {
     const canvas = document.getElementById("bg-3d-canvas");
@@ -1695,7 +1695,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Motion preference check
+    // Accessibility check
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     if (prefersReducedMotion.matches) return;
 
@@ -1713,27 +1713,68 @@ document.addEventListener("DOMContentLoaded", () => {
     resize();
     window.addEventListener("resize", resize, { passive: true });
 
-    // Interactive mouse tracking
+    // Interactive mouse tracking with velocity
     let targetMouseX = 0;
     let targetMouseY = 0;
     let mouseX = 0;
     let mouseY = 0;
     let rawMouseX = -9999;
     let rawMouseY = -9999;
+    let prevMouseX = -9999;
+    let prevMouseY = -9999;
+
+    // Stardust trail emitter
+    const cursorTrail = [];
 
     window.addEventListener(
       "mousemove",
       (e) => {
-        // Normalized -1 to 1
         targetMouseX = (e.clientX / width - 0.5) * 2;
         targetMouseY = (e.clientY / height - 0.5) * 2;
         rawMouseX = e.clientX;
         rawMouseY = e.clientY;
+
+        // Emit micro stardust trail on mouse move
+        if (prevMouseX > -9000) {
+          const distMoved = Math.hypot(rawMouseX - prevMouseX, rawMouseY - prevMouseY);
+          if (distMoved > 8 && cursorTrail.length < 35) {
+            cursorTrail.push({
+              x: rawMouseX + (Math.random() - 0.5) * 8,
+              y: rawMouseY + (Math.random() - 0.5) * 8,
+              vx: (Math.random() - 0.5) * 1.2,
+              vy: (Math.random() - 0.5) * 1.2 - 0.4,
+              size: Math.random() * 2.2 + 1,
+              alpha: 0.85,
+              decay: Math.random() * 0.025 + 0.02
+            });
+          }
+        }
+        prevMouseX = rawMouseX;
+        prevMouseY = rawMouseY;
       },
       { passive: true }
     );
 
-    // Scroll tracking for camera elevation
+    // Click Topographic Sonar Wave System
+    const sonarRipples = [];
+    window.addEventListener(
+      "pointerdown",
+      (e) => {
+        if (sonarRipples.length < 5) {
+          sonarRipples.push({
+            x: e.clientX,
+            y: e.clientY,
+            r: 5,
+            maxR: Math.max(width, height) * 0.85,
+            speed: 11,
+            alpha: 0.85
+          });
+        }
+      },
+      { passive: true }
+    );
+
+    // Scroll tracking
     let scrollY = 0;
     window.addEventListener(
       "scroll",
@@ -1744,26 +1785,29 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     // 3D Grid Configuration for Mountain Topography
-    const GRID_COLS = 26; // X resolution
-    const GRID_ROWS = 22; // Z resolution
+    const GRID_COLS = 26;
+    const GRID_ROWS = 22;
     const GRID_SPACING_X = 75;
     const GRID_SPACING_Z = 75;
     const TOTAL_WIDTH = (GRID_COLS - 1) * GRID_SPACING_X;
     const TOTAL_DEPTH = (GRID_ROWS - 1) * GRID_SPACING_Z;
 
-    // Summit Starlight / Ember Particles
-    const PARTICLE_COUNT = 45;
-    const particles = [];
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      particles.push({
-        x: (Math.random() - 0.5) * TOTAL_WIDTH * 1.2,
-        y: Math.random() * 350 - 100,
-        z: Math.random() * TOTAL_DEPTH + 100,
-        size: Math.random() * 2.2 + 1.2,
-        speedY: -(Math.random() * 0.45 + 0.2),
-        speedX: (Math.random() - 0.5) * 0.25,
+    // Celestial Summit Stars & Constellations
+    const STAR_COUNT = 52;
+    const stars = [];
+    for (let i = 0; i < STAR_COUNT; i++) {
+      stars.push({
+        x: (Math.random() - 0.5) * TOTAL_WIDTH * 1.3,
+        y: Math.random() * 380 - 120,
+        z: Math.random() * TOTAL_DEPTH + 90,
+        size: Math.random() * 2.4 + 1.2,
+        speedY: -(Math.random() * 0.4 + 0.15),
+        speedX: (Math.random() - 0.5) * 0.2,
         phase: Math.random() * Math.PI * 2,
-        alpha: Math.random() * 0.6 + 0.3
+        alpha: Math.random() * 0.6 + 0.35,
+        px: 0,
+        py: 0,
+        visible: false
       });
     }
 
@@ -1772,13 +1816,12 @@ document.addEventListener("DOMContentLoaded", () => {
     let isRunning = true;
 
     // Projection constants
-    const FOCAL_LENGTH = 450;
-    const CAMERA_HEIGHT = -180; // Looking down on terrain
-    const BASE_PITCH = 0.38; // Initial downward tilt angle in radians
+    const FOCAL_LENGTH = 460;
+    const CAMERA_HEIGHT = -185;
+    const BASE_PITCH = 0.36;
 
     function render() {
       if (!isRunning) return;
-
       time += 0.016;
 
       // Smooth interpolation for mouse
@@ -1789,12 +1832,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark";
 
-      // Palette
-      const gridStroke = isDarkMode ? "rgba(239, 179, 0, 0.12)" : "rgba(13, 53, 46, 0.075)";
-      const ridgeStroke = isDarkMode ? "rgba(42, 96, 85, 0.16)" : "rgba(13, 53, 46, 0.04)";
-      const summitGlow = isDarkMode ? "rgba(239, 179, 0, 0.25)" : "rgba(239, 179, 0, 0.18)";
-      const particleColor = isDarkMode ? "rgba(255, 215, 0, " : "rgba(239, 179, 0, ";
+      // ── 1. VOLUMETRIC AURORA BOREALIS VEIL (Atmospheric Sky) ──
+      const auroraBaseY = height * 0.28 + mouseY * 25 - Math.min(scrollY * 0.05, 50);
 
+      // Aurora Ribbon 1 (Alpine Gold & Emerald)
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      for (let x = 0; x <= width; x += 30) {
+        const yCurtain =
+          auroraBaseY +
+          Math.sin(x * 0.0022 + time * 0.45) * 45 +
+          Math.cos(x * 0.0048 - time * 0.3) * 22;
+        ctx.lineTo(x, yCurtain);
+      }
+      ctx.lineTo(width, 0);
+      ctx.closePath();
+      const grad1 = ctx.createLinearGradient(0, auroraBaseY - 60, 0, auroraBaseY + 110);
+      if (isDarkMode) {
+        grad1.addColorStop(0, "rgba(239, 179, 0, 0.08)");
+        grad1.addColorStop(0.45, "rgba(42, 157, 143, 0.12)");
+        grad1.addColorStop(1, "rgba(13, 53, 46, 0)");
+      } else {
+        grad1.addColorStop(0, "rgba(239, 179, 0, 0.04)");
+        grad1.addColorStop(0.5, "rgba(13, 53, 46, 0.055)");
+        grad1.addColorStop(1, "rgba(245, 244, 239, 0)");
+      }
+      ctx.fillStyle = grad1;
+      ctx.fill();
+      ctx.restore();
+
+      // Aurora Ribbon 2 (Ethereal Starlight Teal Wave)
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      for (let x = 0; x <= width; x += 35) {
+        const yCurtain2 =
+          auroraBaseY + 35 +
+          Math.sin(x * 0.0031 - time * 0.35 + 1.2) * 55 +
+          Math.cos(x * 0.0019 + time * 0.25) * 25;
+        ctx.lineTo(x, yCurtain2);
+      }
+      ctx.lineTo(width, 0);
+      ctx.closePath();
+      const grad2 = ctx.createLinearGradient(0, auroraBaseY - 40, 0, auroraBaseY + 140);
+      if (isDarkMode) {
+        grad2.addColorStop(0, "rgba(30, 90, 80, 0.07)");
+        grad2.addColorStop(0.5, "rgba(239, 179, 0, 0.07)");
+        grad2.addColorStop(1, "rgba(10, 43, 37, 0)");
+      } else {
+        grad2.addColorStop(0, "rgba(42, 96, 85, 0.035)");
+        grad2.addColorStop(0.5, "rgba(239, 179, 0, 0.035)");
+        grad2.addColorStop(1, "rgba(245, 244, 239, 0)");
+      }
+      ctx.fillStyle = grad2;
+      ctx.fill();
+      ctx.restore();
+
+      // ── 2. 3D TOPOGRAPHIC PROJECTION MATH ──
       const centerX = width / 2;
       const centerY = height * 0.68 + mouseY * 35 - Math.min(scrollY * 0.08, 60);
 
@@ -1806,18 +1901,15 @@ document.addEventListener("DOMContentLoaded", () => {
       const cosYaw = Math.cos(yaw);
       const sinYaw = Math.sin(yaw);
 
-      // Project a 3D point (x, y, z) into 2D screen coordinates
       function project(x, y, z) {
-        // Yaw rotation around Y axis
         const x1 = x * cosYaw - z * sinYaw;
         const z1 = z * cosYaw + x * sinYaw;
 
-        // Pitch rotation around X axis (shifted by camera height)
         const yCam = y - CAMERA_HEIGHT;
         const y2 = yCam * cosPitch - z1 * sinPitch;
         const z2 = z1 * cosPitch + yCam * sinPitch + 280;
 
-        if (z2 <= 20) return null; // Behind camera
+        if (z2 <= 20) return null;
 
         const scale = FOCAL_LENGTH / z2;
         return {
@@ -1828,8 +1920,40 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       }
 
-      // Calculate terrain vertices
+      // Update Sonar Ripples
+      for (let si = sonarRipples.length - 1; si >= 0; si--) {
+        const sr = sonarRipples[si];
+        sr.r += sr.speed;
+        sr.alpha *= 0.965;
+        if (sr.alpha < 0.02 || sr.r > sr.maxR) {
+          sonarRipples.splice(si, 1);
+        } else {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(sr.x, sr.y, sr.r, 0, Math.PI * 2);
+          ctx.strokeStyle = isDarkMode
+            ? `rgba(239, 179, 0, ${sr.alpha * 0.7})`
+            : `rgba(13, 53, 46, ${sr.alpha * 0.45})`;
+          ctx.lineWidth = 1.8;
+          ctx.stroke();
+
+          if (sr.r > 25) {
+            ctx.beginPath();
+            ctx.arc(sr.x, sr.y, sr.r - 20, 0, Math.PI * 2);
+            ctx.strokeStyle = isDarkMode
+              ? `rgba(255, 215, 0, ${sr.alpha * 0.3})`
+              : `rgba(239, 179, 0, ${sr.alpha * 0.25})`;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+      }
+
+      // ── 3. CALCULATE TERRAIN VERTICES WITH ALTITUDE SHADING & SONAR DISPLACEMENT ──
       const points = [];
+      const peakWaypoints = [];
+
       for (let r = 0; r < GRID_ROWS; r++) {
         const rowPoints = [];
         const zPos = r * GRID_SPACING_Z - TOTAL_DEPTH * 0.35;
@@ -1837,103 +1961,210 @@ document.addEventListener("DOMContentLoaded", () => {
         for (let c = 0; c < GRID_COLS; c++) {
           const xPos = (c - (GRID_COLS - 1) / 2) * GRID_SPACING_X;
 
-          // Sinusoidal multi-octave alpine mountain topography
-          const elev =
-            Math.sin(xPos * 0.0032 + time * 0.35) * Math.cos(zPos * 0.0035 + time * 0.25) * 60 +
+          let elev =
+            Math.sin(xPos * 0.0032 + time * 0.35) * Math.cos(zPos * 0.0035 + time * 0.25) * 62 +
             Math.sin((xPos + zPos) * 0.0018 + time * 0.2) * 45 +
             Math.cos(xPos * 0.006 - time * 0.15) * 20;
 
+          let sonarEnergy = 0;
+          for (let si = 0; si < sonarRipples.length; si++) {
+            const sr = sonarRipples[si];
+            const approxProj = project(xPos, -elev, zPos);
+            if (approxProj) {
+              const dToWave = Math.hypot(approxProj.px - sr.x, approxProj.py - sr.y);
+              const waveDiff = Math.abs(dToWave - sr.r);
+              if (waveDiff < 60) {
+                const waveIntensity = (1 - waveDiff / 60) * sr.alpha;
+                elev += waveIntensity * 38;
+                sonarEnergy += waveIntensity;
+              }
+            }
+          }
+
           const p2d = project(xPos, -elev, zPos);
+          if (p2d) {
+            p2d.elev = elev;
+            p2d.sonarEnergy = sonarEnergy;
+            if (elev > 72 && r > 2 && r < GRID_ROWS - 3) {
+              peakWaypoints.push(p2d);
+            }
+          }
           rowPoints.push(p2d);
         }
         points.push(rowPoints);
       }
 
-      // Render wireframe rows (contour lines)
-      ctx.lineWidth = 1;
+      // ── 4. RENDER SMOOTH ORGANIC TOPOGRAPHIC CONTOUR WAVES ──
       for (let r = 0; r < GRID_ROWS; r++) {
+        const row = points[r];
         ctx.beginPath();
-        let drawing = false;
+        let started = false;
 
-        ctx.strokeStyle = r % 4 === 0 ? summitGlow : gridStroke;
+        for (let c = 0; c < GRID_COLS - 1; c++) {
+          const pCurrent = row[c];
+          const pNext = row[c + 1];
+          if (!pCurrent || !pNext) continue;
 
-        for (let c = 0; c < GRID_COLS; c++) {
-          const pt = points[r][c];
-          if (!pt) {
-            drawing = false;
-            continue;
+          if (!started) {
+            ctx.moveTo(pCurrent.px, pCurrent.py);
+            started = true;
           }
-          if (!drawing) {
-            ctx.moveTo(pt.px, pt.py);
-            drawing = true;
-          } else {
-            ctx.lineTo(pt.px, pt.py);
-          }
+          const midX = (pCurrent.px + pNext.px) / 2;
+          const midY = (pCurrent.py + pNext.py) / 2;
+          ctx.quadraticCurveTo(pCurrent.px, pCurrent.py, midX, midY);
         }
-        ctx.stroke();
+
+        if (started) {
+          const isSummitRidge = r % 3 === 0;
+          const depthAlpha = Math.max(0.12, 1 - (r / GRID_ROWS) * 0.7);
+
+          if (isDarkMode) {
+            ctx.strokeStyle = isSummitRidge
+              ? `rgba(239, 179, 0, ${0.22 * depthAlpha})`
+              : `rgba(42, 157, 143, ${0.18 * depthAlpha})`;
+            ctx.lineWidth = isSummitRidge ? 1.5 : 1;
+          } else {
+            ctx.strokeStyle = isSummitRidge
+              ? `rgba(239, 179, 0, ${0.18 * depthAlpha})`
+              : `rgba(13, 53, 46, ${0.08 * depthAlpha})`;
+            ctx.lineWidth = 1;
+          }
+          ctx.stroke();
+        }
       }
 
-      // Render wireframe columns (ridges)
-      ctx.strokeStyle = ridgeStroke;
-      for (let c = 0; c < GRID_COLS; c += 2) {
+      // Longitudinal Ridge Chords
+      for (let c = 1; c < GRID_COLS - 1; c += 2) {
         ctx.beginPath();
-        let drawing = false;
+        let started = false;
         for (let r = 0; r < GRID_ROWS; r++) {
-          const pt = points[r][c];
-          if (!pt) {
-            drawing = false;
-            continue;
-          }
-          if (!drawing) {
-            ctx.moveTo(pt.px, pt.py);
-            drawing = true;
+          const p = points[r][c];
+          if (!p) continue;
+          if (!started) {
+            ctx.moveTo(p.px, p.py);
+            started = true;
           } else {
-            ctx.lineTo(pt.px, pt.py);
+            ctx.lineTo(p.px, p.py);
           }
         }
-        ctx.stroke();
+        if (started) {
+          ctx.strokeStyle = isDarkMode ? "rgba(42, 96, 85, 0.12)" : "rgba(13, 53, 46, 0.045)";
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
       }
 
-      // Render Summit Sparks & Starlight Embers
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        p.y += p.speedY;
-        p.x += p.speedX;
-
-        // Recycle if risen above top
-        if (p.y < -380) {
-          p.y = 150;
-          p.x = (Math.random() - 0.5) * TOTAL_WIDTH * 1.2;
-          p.z = Math.random() * TOTAL_DEPTH + 100;
-        }
-
-        const pt = project(p.x, p.y, p.z);
-        if (!pt) continue;
-
-        // Cursor repulsion physics
-        const dx = pt.px - rawMouseX;
-        const dy = pt.py - rawMouseY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 130 && dist > 0) {
-          const force = (130 - dist) / 130;
-          p.x += (dx / dist) * force * 3.5;
-          p.y += (dy / dist) * force * 3.5;
-        }
-
-        // Shimmer / Twinkle
-        const shimmer = Math.sin(time * 3 + p.phase) * 0.35 + 0.65;
-        const alpha = Math.min(1, Math.max(0.05, p.alpha * shimmer * pt.scale * 1.8));
-
-        ctx.fillStyle = particleColor + alpha + ")";
+      // Peak Summit Waypoint Diamonds
+      ctx.fillStyle = isDarkMode ? "rgba(239, 179, 0, 0.45)" : "rgba(239, 179, 0, 0.35)";
+      for (let i = 0; i < peakWaypoints.length; i++) {
+        const pk = peakWaypoints[i];
+        const sz = pk.scale * 2.8;
         ctx.beginPath();
-        ctx.arc(pt.px, pt.py, Math.max(0.7, p.size * pt.scale * 1.5), 0, Math.PI * 2);
+        ctx.moveTo(pk.px, pk.py - sz);
+        ctx.lineTo(pk.px + sz, pk.py);
+        ctx.lineTo(pk.px, pk.py + sz);
+        ctx.lineTo(pk.px - sz, pk.py);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // ── 5. CELESTIAL CONSTELLATIONS & SUMMIT WAYPOINTS ──
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        s.y += s.speedY;
+        s.x += s.speedX;
+
+        if (s.y < -390) {
+          s.y = 160;
+          s.x = (Math.random() - 0.5) * TOTAL_WIDTH * 1.3;
+          s.z = Math.random() * TOTAL_DEPTH + 90;
+        }
+
+        const proj = project(s.x, s.y, s.z);
+        if (proj) {
+          s.px = proj.px;
+          s.py = proj.py;
+          s.scale = proj.scale;
+          s.visible = true;
+
+          const dx = proj.px - rawMouseX;
+          const dy = proj.py - rawMouseY;
+          const dist = Math.hypot(dx, dy);
+          if (dist < 140 && dist > 0) {
+            const force = (140 - dist) / 140;
+            s.x += (dx / dist) * force * 3.8;
+            s.y += (dy / dist) * force * 3.8;
+          }
+        } else {
+          s.visible = false;
+        }
+      }
+
+      // Draw Constellation Lines Between Close Stars
+      for (let i = 0; i < stars.length; i++) {
+        const s1 = stars[i];
+        if (!s1.visible) continue;
+
+        for (let j = i + 1; j < stars.length; j++) {
+          const s2 = stars[j];
+          if (!s2.visible) continue;
+
+          const dx = s1.px - s2.px;
+          const dy = s1.py - s2.py;
+          const d2 = dx * dx + dy * dy;
+
+          if (d2 < 82 * 82) {
+            const dist = Math.sqrt(d2);
+            const lineAlpha = (1 - dist / 82) * 0.24 * s1.alpha * s2.alpha;
+            ctx.strokeStyle = isDarkMode
+              ? `rgba(239, 179, 0, ${lineAlpha})`
+              : `rgba(13, 53, 46, ${lineAlpha * 0.8})`;
+            ctx.lineWidth = 0.85;
+            ctx.beginPath();
+            ctx.moveTo(s1.px, s1.py);
+            ctx.lineTo(s2.px, s2.py);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw Star Embers with Glow
+      const starColor = isDarkMode ? "rgba(255, 215, 0, " : "rgba(239, 179, 0, ";
+      for (let i = 0; i < stars.length; i++) {
+        const s = stars[i];
+        if (!s.visible) continue;
+
+        const twinkle = Math.sin(time * 3.2 + s.phase) * 0.35 + 0.65;
+        const alpha = Math.min(1, Math.max(0.08, s.alpha * twinkle * s.scale * 1.9));
+
+        ctx.fillStyle = starColor + alpha + ")";
+        ctx.beginPath();
+        ctx.arc(s.px, s.py, Math.max(0.8, s.size * s.scale * 1.4), 0, Math.PI * 2);
         ctx.fill();
 
-        // Extra outer glow for larger sparks
-        if (p.size > 2.2) {
-          ctx.fillStyle = particleColor + alpha * 0.3 + ")";
+        if (s.size > 2.2) {
+          ctx.fillStyle = starColor + alpha * 0.25 + ")";
           ctx.beginPath();
-          ctx.arc(pt.px, pt.py, p.size * pt.scale * 3.2, 0, Math.PI * 2);
+          ctx.arc(s.px, s.py, s.size * s.scale * 3.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // ── 6. CURSOR STARDUST TRAIL ──
+      for (let i = cursorTrail.length - 1; i >= 0; i--) {
+        const p = cursorTrail[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.alpha -= p.decay;
+
+        if (p.alpha <= 0) {
+          cursorTrail.splice(i, 1);
+        } else {
+          ctx.fillStyle = isDarkMode
+            ? `rgba(255, 215, 0, ${p.alpha * 0.8})`
+            : `rgba(239, 179, 0, ${p.alpha * 0.6})`;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size * p.alpha, 0, Math.PI * 2);
           ctx.fill();
         }
       }
