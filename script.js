@@ -377,6 +377,12 @@ document.addEventListener("DOMContentLoaded", () => {
     animateCounter(statDone,   done);
     animateCounter(statPct,    pct, "%");
 
+    const statAlt = $("stat-alt");
+    if (statAlt) {
+      const altMeters = Math.round(1200 + (pct / 100) * (4810 - 1200));
+      animateCounter(statAlt, altMeters, "m");
+    }
+
     const offset = 264 - (pct / 100) * 264;
     if (ringFill) ringFill.style.strokeDashoffset = offset;
     if (ringPct)  ringPct.textContent = pct + "%";
@@ -1010,6 +1016,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderTasks();
     renderNotes();
     updateStorageMeter();
+    init3DTilt();
     observeReveal();
     $$(".title-split").forEach(initTitleSplit);
   }
@@ -1026,9 +1033,36 @@ document.addEventListener("DOMContentLoaded", () => {
     hamburgerBtn.classList.toggle("open", open);
   });
 
-  // Search (both bars)
+  // Search (both bars with Clear Button)
   [globalSearch, mobileSearch].forEach(inp => {
-    inp?.addEventListener("input", e => { searchQuery = e.target.value; renderTasks(); });
+    inp?.addEventListener("input", e => {
+      searchQuery = e.target.value;
+      if (searchClearBtn) searchClearBtn.classList.toggle("hidden", !searchQuery.trim());
+      renderTasks();
+    });
+  });
+
+  searchClearBtn?.addEventListener("click", () => {
+    if (globalSearch) globalSearch.value = "";
+    if (mobileSearch) mobileSearch.value = "";
+    searchQuery = "";
+    searchClearBtn.classList.add("hidden");
+    renderTasks();
+    globalSearch?.focus();
+  });
+
+  // Interactive Priority Strip click listeners
+  $$(".known-badge[data-filter-prio]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const prio = btn.dataset.filterPrio;
+      if (!prio) return;
+      priorityFilter = prio;
+      if (prioFilter) prioFilter.value = prio;
+      switchToSection("tasks-section");
+      renderTasks();
+      toast(`Filtered by Priority ${btn.textContent.trim()}`);
+      announce(`Filtered by priority ${btn.textContent.trim()}`);
+    });
   });
 
   // View tabs
@@ -1449,15 +1483,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ════════════════════════════════════════════════
-     MOUSE PARALLAX (Hero & Sign)
+     MULTI-LAYER 3D MOUNTAIN PARALLAX
   ════════════════════════════════════════════════ */
   if (window.matchMedia("(pointer: fine)").matches) {
     window.addEventListener("mousemove", e => {
-      const cx = (e.clientX / window.innerWidth - 0.5) * 16;
-      const cy = (e.clientY / window.innerHeight - 0.5) * 16;
+      const cx = (e.clientX / window.innerWidth - 0.5) * 26;
+      const cy = (e.clientY / window.innerHeight - 0.5) * 26;
 
-      const mtn = document.querySelector(".hero-mountain-wrap");
-      if (mtn) mtn.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+      const bg  = document.getElementById("mtn-layer-bg");
+      const mid = document.getElementById("mtn-layer-mid");
+      const fg  = document.getElementById("mtn-layer-fg");
+
+      if (bg)  bg.style.transform  = `translate3d(${cx * 0.35}px, ${cy * 0.35}px, -50px)`;
+      if (mid) mid.style.transform = `translate3d(${cx * 0.75}px, ${cy * 0.75}px, -15px)`;
+      if (fg)  fg.style.transform  = `translate3d(${cx * 1.35}px, ${cy * 1.35}px, 25px)`;
 
       const post = document.querySelector(".sign-post-wrap");
       if (post) post.style.transform = `translate3d(${-cx * 0.6}px, ${-cy * 0.6}px, 0)`;
@@ -1490,8 +1529,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const cx = rect.width / 2;
         const cy = rect.height / 2;
 
-        const rotateX = ((y - cy) / cy) * -7;
-        const rotateY = ((x - cx) / cx) * 7;
+        const rotateX = ((y - cy) / cy) * -6.5;
+        const rotateY = ((x - cx) / cx) * 6.5;
 
         card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.015, 1.015, 1.015)`;
         glare.style.background = `radial-gradient(circle at ${(x / rect.width * 100).toFixed(1)}% ${(y / rect.height * 100).toFixed(1)}%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 65%)`;

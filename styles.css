@@ -2069,4 +2069,37 @@ body.dark-mode .quick-chip.active {
   transform: scale(0.95);
 }
 
+/* ── 8. MULTI-LAYER 3D MOUNTAIN PARALLAX ── */
+.hero-mountain-wrap {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+}
+.mtn-layer-bg {
+  transform: translate3d(0, 0, -50px);
+}
+.mtn-layer-mid {
+  transform: translate3d(0, 0, -15px);
+}
+.mtn-layer-fg {
+  transform: translate3d(0, 0, 25px);
+}
+
+/* ── 9. DYNAMIC 3D TASK ROW ELEVATION ── */
+.task-item {
+  transform: translate3d(0, 0, 0);
+  transition: transform 0.22s cubic-bezier(0.2, 0, 0.2, 1), box-shadow 0.22s ease, border-color 0.2s ease;
+}
+.task-item:hover {
+  transform: translateY(-3px) scale3d(1.008, 1.008, 1.008);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.09), -4px 0 14px rgba(13, 53, 46, 0.16);
+}
+body.dark-mode .task-item:hover {
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), -4px 0 14px rgba(239, 179, 0, 0.2);
+}
+
+/* ── 10. ALTITUDE STAT BADGE ── */
+#stat-alt {
+  color: var(--gold);
+  text-shadow: 0 2px 10px rgba(239, 179, 0, 0.3);
+}
 
