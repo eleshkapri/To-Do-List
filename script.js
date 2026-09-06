@@ -1602,6 +1602,275 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ════════════════════════════════════════════════
+     3D ALPINE TOPOGRAPHY & SUMMIT SPARKS BACKGROUND CANVAS
+  ════════════════════════════════════════════════ */
+  function init3DBackgroundCanvas() {
+    const canvas = document.getElementById("bg-3d-canvas");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    // Motion preference check
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (prefersReducedMotion.matches) return;
+
+    let width = (canvas.width = window.innerWidth);
+    let height = (canvas.height = window.innerHeight);
+    let dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    function resize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.floor(width * dpr);
+      canvas.height = Math.floor(height * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener("resize", resize, { passive: true });
+
+    // Interactive mouse tracking
+    let targetMouseX = 0;
+    let targetMouseY = 0;
+    let mouseX = 0;
+    let mouseY = 0;
+    let rawMouseX = -9999;
+    let rawMouseY = -9999;
+
+    window.addEventListener(
+      "mousemove",
+      (e) => {
+        // Normalized -1 to 1
+        targetMouseX = (e.clientX / width - 0.5) * 2;
+        targetMouseY = (e.clientY / height - 0.5) * 2;
+        rawMouseX = e.clientX;
+        rawMouseY = e.clientY;
+      },
+      { passive: true }
+    );
+
+    // Scroll tracking for camera elevation
+    let scrollY = 0;
+    window.addEventListener(
+      "scroll",
+      () => {
+        scrollY = window.scrollY;
+      },
+      { passive: true }
+    );
+
+    // 3D Grid Configuration for Mountain Topography
+    const GRID_COLS = 26; // X resolution
+    const GRID_ROWS = 22; // Z resolution
+    const GRID_SPACING_X = 75;
+    const GRID_SPACING_Z = 75;
+    const TOTAL_WIDTH = (GRID_COLS - 1) * GRID_SPACING_X;
+    const TOTAL_DEPTH = (GRID_ROWS - 1) * GRID_SPACING_Z;
+
+    // Summit Starlight / Ember Particles
+    const PARTICLE_COUNT = 45;
+    const particles = [];
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      particles.push({
+        x: (Math.random() - 0.5) * TOTAL_WIDTH * 1.2,
+        y: Math.random() * 350 - 100,
+        z: Math.random() * TOTAL_DEPTH + 100,
+        size: Math.random() * 2.2 + 1.2,
+        speedY: -(Math.random() * 0.45 + 0.2),
+        speedX: (Math.random() - 0.5) * 0.25,
+        phase: Math.random() * Math.PI * 2,
+        alpha: Math.random() * 0.6 + 0.3
+      });
+    }
+
+    let animId = null;
+    let time = 0;
+    let isRunning = true;
+
+    // Projection constants
+    const FOCAL_LENGTH = 450;
+    const CAMERA_HEIGHT = -180; // Looking down on terrain
+    const BASE_PITCH = 0.38; // Initial downward tilt angle in radians
+
+    function render() {
+      if (!isRunning) return;
+
+      time += 0.016;
+
+      // Smooth interpolation for mouse
+      mouseX += (targetMouseX - mouseX) * 0.04;
+      mouseY += (targetMouseY - mouseY) * 0.04;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const isDarkMode = document.documentElement.getAttribute("data-theme") === "dark";
+
+      // Palette
+      const gridStroke = isDarkMode ? "rgba(239, 179, 0, 0.12)" : "rgba(13, 53, 46, 0.075)";
+      const ridgeStroke = isDarkMode ? "rgba(42, 96, 85, 0.16)" : "rgba(13, 53, 46, 0.04)";
+      const summitGlow = isDarkMode ? "rgba(239, 179, 0, 0.25)" : "rgba(239, 179, 0, 0.18)";
+      const particleColor = isDarkMode ? "rgba(255, 215, 0, " : "rgba(239, 179, 0, ";
+
+      const centerX = width / 2;
+      const centerY = height * 0.68 + mouseY * 35 - Math.min(scrollY * 0.08, 60);
+
+      const pitch = BASE_PITCH + mouseY * 0.12;
+      const yaw = mouseX * 0.15;
+
+      const cosPitch = Math.cos(pitch);
+      const sinPitch = Math.sin(pitch);
+      const cosYaw = Math.cos(yaw);
+      const sinYaw = Math.sin(yaw);
+
+      // Project a 3D point (x, y, z) into 2D screen coordinates
+      function project(x, y, z) {
+        // Yaw rotation around Y axis
+        const x1 = x * cosYaw - z * sinYaw;
+        const z1 = z * cosYaw + x * sinYaw;
+
+        // Pitch rotation around X axis (shifted by camera height)
+        const yCam = y - CAMERA_HEIGHT;
+        const y2 = yCam * cosPitch - z1 * sinPitch;
+        const z2 = z1 * cosPitch + yCam * sinPitch + 280;
+
+        if (z2 <= 20) return null; // Behind camera
+
+        const scale = FOCAL_LENGTH / z2;
+        return {
+          px: centerX + x1 * scale,
+          py: centerY + y2 * scale,
+          scale: scale,
+          z: z2
+        };
+      }
+
+      // Calculate terrain vertices
+      const points = [];
+      for (let r = 0; r < GRID_ROWS; r++) {
+        const rowPoints = [];
+        const zPos = r * GRID_SPACING_Z - TOTAL_DEPTH * 0.35;
+
+        for (let c = 0; c < GRID_COLS; c++) {
+          const xPos = (c - (GRID_COLS - 1) / 2) * GRID_SPACING_X;
+
+          // Sinusoidal multi-octave alpine mountain topography
+          const elev =
+            Math.sin(xPos * 0.0032 + time * 0.35) * Math.cos(zPos * 0.0035 + time * 0.25) * 60 +
+            Math.sin((xPos + zPos) * 0.0018 + time * 0.2) * 45 +
+            Math.cos(xPos * 0.006 - time * 0.15) * 20;
+
+          const p2d = project(xPos, -elev, zPos);
+          rowPoints.push(p2d);
+        }
+        points.push(rowPoints);
+      }
+
+      // Render wireframe rows (contour lines)
+      ctx.lineWidth = 1;
+      for (let r = 0; r < GRID_ROWS; r++) {
+        ctx.beginPath();
+        let drawing = false;
+
+        ctx.strokeStyle = r % 4 === 0 ? summitGlow : gridStroke;
+
+        for (let c = 0; c < GRID_COLS; c++) {
+          const pt = points[r][c];
+          if (!pt) {
+            drawing = false;
+            continue;
+          }
+          if (!drawing) {
+            ctx.moveTo(pt.px, pt.py);
+            drawing = true;
+          } else {
+            ctx.lineTo(pt.px, pt.py);
+          }
+        }
+        ctx.stroke();
+      }
+
+      // Render wireframe columns (ridges)
+      ctx.strokeStyle = ridgeStroke;
+      for (let c = 0; c < GRID_COLS; c += 2) {
+        ctx.beginPath();
+        let drawing = false;
+        for (let r = 0; r < GRID_ROWS; r++) {
+          const pt = points[r][c];
+          if (!pt) {
+            drawing = false;
+            continue;
+          }
+          if (!drawing) {
+            ctx.moveTo(pt.px, pt.py);
+            drawing = true;
+          } else {
+            ctx.lineTo(pt.px, pt.py);
+          }
+        }
+        ctx.stroke();
+      }
+
+      // Render Summit Sparks & Starlight Embers
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        p.y += p.speedY;
+        p.x += p.speedX;
+
+        // Recycle if risen above top
+        if (p.y < -380) {
+          p.y = 150;
+          p.x = (Math.random() - 0.5) * TOTAL_WIDTH * 1.2;
+          p.z = Math.random() * TOTAL_DEPTH + 100;
+        }
+
+        const pt = project(p.x, p.y, p.z);
+        if (!pt) continue;
+
+        // Cursor repulsion physics
+        const dx = pt.px - rawMouseX;
+        const dy = pt.py - rawMouseY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist < 130 && dist > 0) {
+          const force = (130 - dist) / 130;
+          p.x += (dx / dist) * force * 3.5;
+          p.y += (dy / dist) * force * 3.5;
+        }
+
+        // Shimmer / Twinkle
+        const shimmer = Math.sin(time * 3 + p.phase) * 0.35 + 0.65;
+        const alpha = Math.min(1, Math.max(0.05, p.alpha * shimmer * pt.scale * 1.8));
+
+        ctx.fillStyle = particleColor + alpha + ")";
+        ctx.beginPath();
+        ctx.arc(pt.px, pt.py, Math.max(0.7, p.size * pt.scale * 1.5), 0, Math.PI * 2);
+        ctx.fill();
+
+        // Extra outer glow for larger sparks
+        if (p.size > 2.2) {
+          ctx.fillStyle = particleColor + alpha * 0.3 + ")";
+          ctx.beginPath();
+          ctx.arc(pt.px, pt.py, p.size * pt.scale * 3.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      animId = requestAnimationFrame(render);
+    }
+
+    // Tab visibility handling
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        isRunning = false;
+        if (animId) cancelAnimationFrame(animId);
+      } else {
+        isRunning = true;
+        animId = requestAnimationFrame(render);
+      }
+    });
+
+    animId = requestAnimationFrame(render);
+  }
+
+  /* ════════════════════════════════════════════════
      INIT
   ════════════════════════════════════════════════ */
   applyTheme(isDark);
@@ -1609,6 +1878,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setActiveTab("today");
   initSlider();
   init3DTilt();
+  init3DBackgroundCanvas();
   refresh();
 
   // Initial scroll-reveal pass

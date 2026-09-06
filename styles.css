@@ -1785,6 +1785,7 @@ body.dark-mode .btn-outline-forest:hover {
   }
   .page-transition { display: none !important; }
   .cursor-dot, .cursor-ring { display: none !important; }
+  .bg-3d-canvas { display: none !important; }
 }
 
 /* ── PRINT STYLESHEET ── */
@@ -2101,5 +2102,21 @@ body.dark-mode .task-item:hover {
 #stat-alt {
   color: var(--gold);
   text-shadow: 0 2px 10px rgba(239, 179, 0, 0.3);
+}
+
+/* ── 11. FULL-SCREEN 3D ALPINE BACKGROUND CANVAS ── */
+.bg-3d-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: -1;
+  opacity: 0.85;
+  transition: opacity 0.5s ease;
+}
+body.dark-mode .bg-3d-canvas {
+  opacity: 1;
 }
 
