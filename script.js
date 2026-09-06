@@ -1811,6 +1811,22 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+    // Bioluminescent Alpine Valley Spores (The Green Mountain Ecosystem)
+    const VALLEY_SPORE_COUNT = 24;
+    const valleySpores = [];
+    for (let i = 0; i < VALLEY_SPORE_COUNT; i++) {
+      valleySpores.push({
+        x: (Math.random() - 0.5) * TOTAL_WIDTH * 1.15,
+        y: Math.random() * 220 + 40,
+        z: Math.random() * TOTAL_DEPTH * 0.85 + 100,
+        size: Math.random() * 2.8 + 1.2,
+        speedY: -(Math.random() * 0.3 + 0.12),
+        speedX: (Math.random() - 0.5) * 0.25,
+        phase: Math.random() * Math.PI * 2,
+        alpha: Math.random() * 0.55 + 0.3
+      });
+    }
+
     let animId = null;
     let time = 0;
     let isRunning = true;
@@ -1994,7 +2010,34 @@ document.addEventListener("DOMContentLoaded", () => {
         points.push(rowPoints);
       }
 
-      // ── 4. RENDER SMOOTH ORGANIC TOPOGRAPHIC CONTOUR WAVES ──
+      // ── 4A. TRANSLUCENT EMERALD TOPOGRAPHIC FACET RIBBONS (Green Volumetric Depth) ──
+      for (let r = 0; r < GRID_ROWS - 1; r += 2) {
+        const rowTop = points[r];
+        const rowBot = points[r + 1];
+        if (!rowTop || !rowBot || !rowTop[0] || !rowBot[0]) continue;
+
+        ctx.beginPath();
+        ctx.moveTo(rowTop[0].px, rowTop[0].py);
+        for (let c = 1; c < GRID_COLS; c++) {
+          if (rowTop[c]) ctx.lineTo(rowTop[c].px, rowTop[c].py);
+        }
+        for (let c = GRID_COLS - 1; c >= 0; c--) {
+          if (rowBot[c]) ctx.lineTo(rowBot[c].px, rowBot[c].py);
+        }
+        ctx.closePath();
+
+        const depthAlpha = Math.max(0.04, 1 - (r / GRID_ROWS) * 0.7);
+        if (isDarkMode) {
+          ctx.fillStyle = r % 4 === 0
+            ? `rgba(42, 157, 143, ${0.075 * depthAlpha})`
+            : `rgba(13, 53, 46, ${0.11 * depthAlpha})`;
+        } else {
+          ctx.fillStyle = `rgba(13, 53, 46, ${0.032 * depthAlpha})`;
+        }
+        ctx.fill();
+      }
+
+      // ── 4B. RENDER SMOOTH ORGANIC TOPOGRAPHIC CONTOUR WAVES ──
       for (let r = 0; r < GRID_ROWS; r++) {
         const row = points[r];
         ctx.beginPath();
@@ -2148,6 +2191,41 @@ document.addEventListener("DOMContentLoaded", () => {
           ctx.arc(s.px, s.py, s.size * s.scale * 3.2, 0, Math.PI * 2);
           ctx.fill();
         }
+      }
+
+      // ── 5B. BIOLUMINESCENT ALPINE VALLEY SPORES (Luminous Emerald Mountain Motes) ──
+      for (let i = 0; i < valleySpores.length; i++) {
+        const sp = valleySpores[i];
+        sp.y += sp.speedY;
+        sp.x += sp.speedX;
+
+        if (sp.y < -260) {
+          sp.y = 200;
+          sp.x = (Math.random() - 0.5) * TOTAL_WIDTH * 1.15;
+          sp.z = Math.random() * TOTAL_DEPTH * 0.85 + 100;
+        }
+
+        const proj = project(sp.x, sp.y, sp.z);
+        if (!proj) continue;
+
+        const pulse = Math.sin(time * 2.6 + sp.phase) * 0.4 + 0.6;
+        const spAlpha = Math.min(0.9, sp.alpha * pulse * proj.scale * 2.2);
+
+        // Core jade mote
+        ctx.fillStyle = isDarkMode
+          ? `rgba(64, 224, 208, ${spAlpha})`
+          : `rgba(42, 157, 143, ${spAlpha * 0.7})`;
+        ctx.beginPath();
+        ctx.arc(proj.px, proj.py, Math.max(1, sp.size * proj.scale * 1.3), 0, Math.PI * 2);
+        ctx.fill();
+
+        // Outer soft emerald aura
+        ctx.fillStyle = isDarkMode
+          ? `rgba(42, 157, 143, ${spAlpha * 0.3})`
+          : `rgba(13, 53, 46, ${spAlpha * 0.2})`;
+        ctx.beginPath();
+        ctx.arc(proj.px, proj.py, sp.size * proj.scale * 3.4, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       // ── 6. CURSOR STARDUST TRAIL ──
