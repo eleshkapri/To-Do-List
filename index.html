@@ -1,499 +1,559 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DXM // SPACE — Taskflow Mission Control</title>
-    
-    <!-- Fonts: Poppins (Regular, Semi-bold, Bold, Extra-Bold Italic) & Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700;1,800;1,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
-    <!-- Stylesheet -->
-    <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Summit Tasks — for better productivity</title>
+
+  <!-- Montserrat (matching to-top.ch) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body class="dxm-space-theme">
-    <!-- Starfield Interactive Canvas -->
-    <canvas id="starfield-canvas"></canvas>
+<body>
 
-    <!-- Meteor / Shooting Star Speed Lines -->
-    <div class="speed-line speed-line-1"></div>
-    <div class="speed-line speed-line-2"></div>
-    <div class="speed-line speed-line-3"></div>
+  <!-- Scroll to top button (to-top.ch style) -->
+  <a href="#top" class="scroll-to-top" id="scroll-to-top" aria-label="Back to top">
+    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40" fill="none">
+      <circle cx="20" cy="20" r="20" fill="#0D352E"/>
+      <circle cx="20" cy="20" r="19.2" stroke="white" stroke-opacity="0.25" stroke-width="1.6"/>
+      <path d="M20.7071 11.2929C20.3166 10.9024 19.6834 10.9024 19.2929 11.2929L12.9289 17.6569C12.5384 18.0474 12.5384 18.6805 12.9289 19.0711C13.3195 19.4616 13.9526 19.4616 14.3431 19.0711L20 13.4142L25.6569 19.0711C26.0474 19.4616 26.6805 19.4616 27.0711 19.0711C27.4616 18.6805 27.4616 18.0474 27.0711 17.6569L20.7071 11.2929ZM19 28C19 28.5523 19.4477 29 20 29C20.5523 29 21 28.5523 21 28L19 28ZM20 12L19 12L19 28L20 28L21 28L21 12L20 12Z" fill="#EFB300"/>
+    </svg>
+  </a>
 
-    <!-- Cosmic Nebula Glow Orbs -->
-    <div class="nebula-glow nebula-purple"></div>
-    <div class="nebula-glow nebula-blue"></div>
+  <div id="top" class="top-anchor"></div>
 
-    <div class="app-container">
-        <!-- Mobile Sidebar Backdrop -->
-        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+  <div class="page-wrapper">
 
-        <!-- Left Mission Control Sidebar -->
-        <aside class="sidebar" id="sidebar">
-            <div class="sidebar-top">
-                <div class="brand">
-                    <div class="brand-logo-frame">
-                        <span class="brand-glyph">✦</span>
-                    </div>
-                    <div class="brand-info">
-                        <h2>DXM<span class="brand-dot">.</span>SPACE</h2>
-                        <span class="brand-sub">TASK ENGINE // V3.0</span>
-                    </div>
-                </div>
-                <button class="icon-btn mobile-close-btn" id="mobile-sidebar-close" aria-label="Close sidebar">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
+    <!-- ═══════════════════════════════════════════
+         NAVBAR (to-top.ch style)
+    ═══════════════════════════════════════════ -->
+    <nav class="navbar" id="navbar">
+      <div class="nav-container">
+        <div class="nav-left">
+          <button class="mobile-menu-btn" id="mobile-menu-btn" aria-label="Toggle menu">
+            <i class="fa-solid fa-bars"></i>
+          </button>
+          <a href="#" class="brand-logo">
+            <span class="brand-mountain">▲</span>
+            <span class="brand-text">SUMMIT<strong>TASKS</strong></span>
+          </a>
+        </div>
 
-            <!-- Primary Action: New Transmission -->
-            <button class="btn-primary sidebar-action-btn" id="sidebar-quick-add-btn">
-                <span>+ NEW TASK</span>
-                <kbd class="shortcut-key">N</kbd>
+        <div class="nav-links" id="nav-links">
+          <button class="nav-link active" data-view="today">Today</button>
+          <button class="nav-link" data-view="upcoming">Upcoming</button>
+          <button class="nav-link" data-view="starred">Priorities</button>
+          <button class="nav-link" data-view="completed">Summited</button>
+          <button class="nav-link" data-view="notes">Trail Notes</button>
+        </div>
+
+        <div class="nav-right">
+          <div class="nav-search-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="global-search" placeholder="Search tasks..." />
+          </div>
+          <button class="btn-gold" id="sidebar-quick-add-btn">+ New Task</button>
+          <button class="theme-toggle-btn" id="theme-toggle" title="Toggle theme">
+            <i class="fa-solid fa-circle-half-stroke"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="layout-body">
+
+      <!-- ═══════════════════════════════════════════
+           SIDEBAR (to-top.ch vertical nav style)
+      ═══════════════════════════════════════════ -->
+      <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+      <aside class="sidebar" id="sidebar">
+
+        <div class="sidebar-brand-block">
+          <div class="sidebar-mountain-icon">▲</div>
+          <div>
+            <h2 class="sidebar-brand-title">SUMMIT<br><strong>TASKS</strong></h2>
+            <p class="sidebar-brand-sub">for better productivity</p>
+          </div>
+          <button class="sidebar-close-btn" id="sidebar-close-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Search -->
+        <div class="sidebar-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="sidebar-search" placeholder="Search the trail..." />
+        </div>
+
+        <!-- Quick Add -->
+        <button class="btn-gold sidebar-add-btn" id="sidebar-add-btn">
+          <i class="fa-solid fa-plus"></i> New Task
+        </button>
+
+        <!-- Trail Views -->
+        <div class="sidebar-group">
+          <p class="sidebar-group-label">TRAIL VIEWS</p>
+          <nav class="sidebar-nav">
+            <button class="sidebar-nav-btn active" data-view="today">
+              <span class="sidebar-nav-icon"><i class="fa-solid fa-compass"></i></span>
+              <span>Today's Route</span>
+              <span class="sidebar-count" id="count-today">0</span>
             </button>
-
-            <!-- Cosmic Search Console -->
-            <div class="search-box">
-                <i class="fa-solid fa-satellite-dish search-icon"></i>
-                <input type="text" id="global-search" placeholder="SEARCH SIGNALS... ( / )" />
-            </div>
-
-            <!-- Smart Views Navigation -->
-            <div class="nav-group">
-                <div class="group-title">TELEMETRY VIEWS</div>
-                <nav class="nav-list">
-                    <button class="nav-btn active" data-view="today">
-                        <span class="nav-btn-left">
-                            <span class="nav-icon-box">
-                                <i class="fa-solid fa-crosshairs"></i>
-                            </span>
-                            <span>CURRENT ORBIT</span>
-                        </span>
-                        <span class="nav-count" id="count-today">0</span>
-                    </button>
-                    <button class="nav-btn" data-view="upcoming">
-                        <span class="nav-btn-left">
-                            <span class="nav-icon-box">
-                                <i class="fa-solid fa-forward-fast"></i>
-                            </span>
-                            <span>TRAJECTORY</span>
-                        </span>
-                        <span class="nav-count" id="count-upcoming">0</span>
-                    </button>
-                    <button class="nav-btn" data-view="starred">
-                        <span class="nav-btn-left">
-                            <span class="nav-icon-box">
-                                <i class="fa-solid fa-bolt"></i>
-                            </span>
-                            <span>CRITICAL PRIORITY</span>
-                        </span>
-                        <span class="nav-count" id="count-starred">0</span>
-                    </button>
-                    <button class="nav-btn" data-view="inbox">
-                        <span class="nav-btn-left">
-                            <span class="nav-icon-box">
-                                <i class="fa-solid fa-terminal"></i>
-                            </span>
-                            <span>SIGNAL INBOX</span>
-                        </span>
-                        <span class="nav-count" id="count-inbox">0</span>
-                    </button>
-                    <button class="nav-btn" data-view="completed">
-                        <span class="nav-btn-left">
-                            <span class="nav-icon-box">
-                                <i class="fa-solid fa-circle-check"></i>
-                            </span>
-                            <span>ARCHIVED LOGS</span>
-                        </span>
-                        <span class="nav-count" id="count-completed">0</span>
-                    </button>
-                    <button class="nav-btn" data-view="notes">
-                        <span class="nav-btn-left">
-                            <span class="nav-icon-box">
-                                <i class="fa-solid fa-meteor"></i>
-                            </span>
-                            <span>TRANSMISSIONS</span>
-                        </span>
-                        <span class="nav-count" id="count-notes">0</span>
-                    </button>
-                </nav>
-            </div>
-
-            <!-- Trajectories / Projects Section -->
-            <div class="nav-group">
-                <div class="group-header">
-                    <span class="group-title">ACTIVE SECTORS</span>
-                    <button class="icon-btn-xs" id="btn-add-project" title="Add sector">
-                        <i class="fa-solid fa-plus"></i>
-                    </button>
-                </div>
-                <div class="projects-list" id="projects-list">
-                    <!-- Populated dynamically via JS -->
-                </div>
-            </div>
-
-            <!-- Tags Filter Section -->
-            <div class="nav-group">
-                <div class="group-title">SIGNAL TAGS</div>
-                <div class="tags-list" id="tags-list">
-                    <button class="tag-chip active" data-tag="all">#ALL</button>
-                    <button class="tag-chip" data-tag="urgent">#URGENT</button>
-                    <button class="tag-chip" data-tag="dev">#DEV</button>
-                    <button class="tag-chip" data-tag="design">#DESIGN</button>
-                    <button class="tag-chip" data-tag="work">#WORK</button>
-                </div>
-            </div>
-
-            <!-- Sidebar Footer with Cosmic Audio & Telemetry -->
-            <div class="sidebar-bottom">
-                <div class="streak-card card-border shiny-top">
-                    <div class="streak-icon">
-                        <i class="fa-solid fa-satellite"></i>
-                    </div>
-                    <div class="streak-info">
-                        <strong>STATION STREAK</strong>
-                        <small>5 ORBITS CONTINUOUS</small>
-                    </div>
-                </div>
-
-                <div class="footer-controls">
-                    <!-- dxm.space Audio Equalizer Player Toggle -->
-                    <button class="music-play-btn" id="music-play" title="Toggle Cosmic Atmosphere Synthesizer">
-                        <div class="eq-bar"></div>
-                        <div class="eq-bar"></div>
-                        <div class="eq-bar"></div>
-                        <div class="eq-bar"></div>
-                        <div class="eq-bar"></div>
-                    </button>
-
-                    <span class="status-indicator">
-                        <span class="pulse-dot"></span> ORBITAL LINK OK
-                    </span>
-
-                    <button class="theme-btn" id="theme-toggle" title="Toggle Light / Cosmic mode">
-                        <i class="fa-solid fa-moon"></i>
-                    </button>
-                </div>
-            </div>
-        </aside>
-
-        <!-- Main Task Workspace -->
-        <main class="main-workspace">
-            <!-- Top Action Header -->
-            <div class="workspace-top-bar">
-                <div class="top-bar-left">
-                    <button class="icon-btn mobile-menu-btn" id="mobile-sidebar-toggle" aria-label="Toggle menu">
-                        <i class="fa-solid fa-bars"></i>
-                    </button>
-                    <div class="date-chip">
-                        <i class="fa-regular fa-clock"></i>
-                        <span id="header-date-text">EARTH TIME // 2026.09.06</span>
-                    </div>
-                </div>
-
-                <div class="top-bar-right">
-                    <select id="priority-filter" class="clean-select" aria-label="Filter priority">
-                        <option value="all">✦ ALL THRUST LEVELS</option>
-                        <option value="p1">🔴 P1 // CRITICAL</option>
-                        <option value="p2">🟡 P2 // ELEVATED</option>
-                        <option value="p3">🔵 P3 // STANDARD</option>
-                        <option value="p4">⚪ P4 // ROUTINE</option>
-                    </select>
-
-                    <select id="sort-filter" class="clean-select" aria-label="Sort tasks">
-                        <option value="dueDate-asc">TARGET HORIZON</option>
-                        <option value="priority-desc">THRUST PRIORITY</option>
-                        <option value="title-asc">IDENTIFIER (A-Z)</option>
-                        <option value="created-desc">LOGGED RECENT</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Hero Mission Overview Banner (dxm.space Style) -->
-            <section class="hero-banner shiny-border shiny-top" id="hero-banner">
-                <div class="hero-content">
-                    <div class="hero-greeting">
-                        <span class="eyebrow eyebrow--signal">✦ TRANSMISSION RECEIVED // STATION ALPHA</span>
-                        <h1 class="hero-h1 text-gr-1" id="hero-greeting-text">WELCOME ABOARD, ELESH</h1>
-                        <p class="hero-quote" id="hero-quote">"Navigate the digital frontier with precision and momentum."</p>
-                    </div>
-
-                    <div class="hero-meta-row">
-                        <div class="hero-stat-pill">
-                            <i class="fa-solid fa-radar"></i>
-                            <span id="hero-stat-active">0 ACTIVE MISSIONS</span>
-                        </div>
-                        <div class="hero-stat-pill">
-                            <i class="fa-solid fa-circle-check"></i>
-                            <span id="hero-stat-done">0 LOGGED</span>
-                        </div>
-                        <div class="hero-stat-pill">
-                            <i class="fa-solid fa-gauge-high"></i>
-                            <span id="hero-stat-status">OPTIMAL VELOCITY</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Cosmic Radial Telemetry Ring -->
-                <div class="hero-progress-wrapper">
-                    <div class="radial-ring-box">
-                        <svg class="radial-progress-svg" viewBox="0 0 100 100">
-                            <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
-                            <circle class="ring-fill" id="ring-fill" cx="50" cy="50" r="42"></circle>
-                        </svg>
-                        <div class="ring-center-text">
-                            <strong id="ring-percent">0%</strong>
-                            <span>ORBIT</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Active Sectors & Trajectories (Project Cards Row) -->
-            <section class="focus-projects-section" id="focus-projects-section">
-                <div class="section-title-row">
-                    <div class="title-with-icon">
-                        <span class="cosmic-spark">✦</span>
-                        <h3 class="text-gr-2">ACTIVE SECTORS & TRAJECTORIES</h3>
-                    </div>
-                    <span class="section-hint">MISSION PROGRESS OVERVIEW</span>
-                </div>
-                <div class="focus-cards-grid" id="focus-cards-grid">
-                    <!-- Populated dynamically via JS -->
-                </div>
-            </section>
-
-            <!-- Tasks Pane -->
-            <div class="content-pane active" id="pane-tasks-view">
-                <div class="view-header-row">
-                    <div class="view-title-wrap">
-                        <h2 class="text-gr-3" id="view-title">CURRENT ORBIT TASKS</h2>
-                        <span class="view-badge-pill" id="view-task-badge">0 MISSIONS</span>
-                    </div>
-                </div>
-
-                <!-- Cosmic Command Deck: Quick Task Input -->
-                <div class="inline-task-creator card-border shiny-top" id="inline-creator">
-                    <div class="creator-input-row">
-                        <div class="circle-placeholder">
-                            <i class="fa-solid fa-plus"></i>
-                        </div>
-                        <input type="text" id="task-input-title" placeholder="INITIALIZE NEW TASK... (PRESS ENTER TO TRANSMIT)" />
-                    </div>
-                    <div class="creator-details-row" id="creator-details">
-                        <input type="text" id="task-input-desc" placeholder="Mission specifications, coordinates, or notes (optional)..." />
-                        <div class="creator-chips-row">
-                            <div class="chip-group">
-                                <input type="date" id="task-input-date" class="chip-date-input" title="Target Date" />
-                                
-                                <select id="task-input-priority" class="chip-select">
-                                    <option value="p4">⚪ P4 // ROUTINE</option>
-                                    <option value="p3">🔵 P3 // STANDARD</option>
-                                    <option value="p2" selected>🟡 P2 // ELEVATED</option>
-                                    <option value="p1">🔴 P1 // CRITICAL</option>
-                                </select>
-
-                                <select id="task-input-project" class="chip-select">
-                                    <!-- Populated dynamically -->
-                                </select>
-
-                                <select id="task-input-tag" class="chip-select">
-                                    <option value="general">#GENERAL</option>
-                                    <option value="urgent">#URGENT</option>
-                                    <option value="work">#WORK</option>
-                                    <option value="dev">#DEV</option>
-                                    <option value="design">#DESIGN</option>
-                                </select>
-                            </div>
-                            <div class="creator-actions">
-                                <button type="button" class="btn-secondary" id="cancel-inline-add">
-                                    <span>CLEAR</span>
-                                </button>
-                                <button type="button" class="btn-primary" id="submit-inline-add">
-                                    <span>TRANSMIT TASK</span>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Task Groups / List -->
-                <div class="tasks-container">
-                    <!-- Empty State -->
-                    <div class="empty-state hidden" id="empty-state">
-                        <div class="empty-illustration-box">
-                            <i class="fa-solid fa-satellite"></i>
-                        </div>
-                        <h3>ALL TRAJECTORIES CLEAR</h3>
-                        <p id="empty-state-msg">Zero pending missions in this sector. Log a new task above.</p>
-                    </div>
-
-                    <!-- Active Task List -->
-                    <ul class="task-list" id="active-tasks-list">
-                        <!-- Injected dynamically -->
-                    </ul>
-
-                    <!-- Completed Tasks Accordion -->
-                    <div class="completed-section" id="completed-section">
-                        <button class="completed-toggle-btn" id="completed-toggle-btn">
-                            <i class="fa-solid fa-chevron-right toggle-arrow" id="completed-toggle-arrow"></i>
-                            <span>MISSION ARCHIVE (<span id="completed-accordion-count">0</span> LOGGED)</span>
-                        </button>
-                        <ul class="task-list completed-list hidden" id="completed-tasks-list">
-                            <!-- Injected dynamically -->
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Notes & Transmissions Pane -->
-            <div class="content-pane" id="pane-notes-view">
-                <div class="notes-header">
-                    <div>
-                        <h2 class="text-gr-1">SIGNAL TRANSMISSIONS & NOTES</h2>
-                        <p>Raw mission logs, spontaneous brainstorms, and telemetry notes.</p>
-                    </div>
-                    <button class="btn-primary" id="btn-add-note">
-                        <span>+ LOG TRANSMISSION</span>
-                    </button>
-                </div>
-                <div class="notes-grid" id="notes-grid">
-                    <!-- Injected dynamically -->
-                </div>
-            </div>
-        </main>
-    </div>
-
-    <!-- MODAL: Edit Task -->
-    <div class="modal-overlay" id="edit-modal" aria-hidden="true">
-        <div class="modal-card card-border shiny-top">
-            <div class="modal-header">
-                <h3 class="text-gr-1">UPDATE MISSION LOG</h3>
-                <button class="icon-btn modal-close-btn" id="edit-modal-close">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <form id="edit-task-form" class="modal-form">
-                <input type="hidden" id="edit-task-id" />
-
-                <div class="form-group">
-                    <label for="edit-title">MISSION OBJECTIVE <span class="req">*</span></label>
-                    <input type="text" id="edit-title" required />
-                </div>
-
-                <div class="form-group">
-                    <label for="edit-desc">TELEMETRY & SPECIFICATIONS</label>
-                    <textarea id="edit-desc" rows="3"></textarea>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group flex-1">
-                        <label for="edit-project">SECTOR / PROJECT</label>
-                        <select id="edit-project"></select>
-                    </div>
-                    <div class="form-group flex-1">
-                        <label for="edit-priority">THRUST PRIORITY</label>
-                        <select id="edit-priority">
-                            <option value="p1">🔴 P1 // CRITICAL</option>
-                            <option value="p2">🟡 P2 // ELEVATED</option>
-                            <option value="p3">🔵 P3 // STANDARD</option>
-                            <option value="p4">⚪ P4 // ROUTINE</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group flex-1">
-                        <label for="edit-date">TARGET HORIZON</label>
-                        <input type="date" id="edit-date" />
-                    </div>
-                    <div class="form-group flex-1">
-                        <label for="edit-tag">SIGNAL TAG</label>
-                        <select id="edit-tag">
-                            <option value="general">#GENERAL</option>
-                            <option value="urgent">#URGENT</option>
-                            <option value="work">#WORK</option>
-                            <option value="dev">#DEV</option>
-                            <option value="design">#DESIGN</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" id="edit-modal-cancel">
-                        <span>CANCEL</span>
-                    </button>
-                    <button type="submit" class="btn-primary">
-                        <span>COMMIT CHANGES</span>
-                    </button>
-                </div>
-            </form>
+            <button class="sidebar-nav-btn" data-view="upcoming">
+              <span class="sidebar-nav-icon"><i class="fa-solid fa-route"></i></span>
+              <span>Upcoming</span>
+              <span class="sidebar-count" id="count-upcoming">0</span>
+            </button>
+            <button class="sidebar-nav-btn" data-view="starred">
+              <span class="sidebar-nav-icon"><i class="fa-solid fa-flag"></i></span>
+              <span>Priorities</span>
+              <span class="sidebar-count" id="count-starred">0</span>
+            </button>
+            <button class="sidebar-nav-btn" data-view="inbox">
+              <span class="sidebar-nav-icon"><i class="fa-solid fa-inbox"></i></span>
+              <span>Inbox</span>
+              <span class="sidebar-count" id="count-inbox">0</span>
+            </button>
+            <button class="sidebar-nav-btn" data-view="completed">
+              <span class="sidebar-nav-icon"><i class="fa-solid fa-mountain-sun"></i></span>
+              <span>Summited</span>
+              <span class="sidebar-count" id="count-completed">0</span>
+            </button>
+            <button class="sidebar-nav-btn" data-view="notes">
+              <span class="sidebar-nav-icon"><i class="fa-regular fa-note-sticky"></i></span>
+              <span>Trail Notes</span>
+              <span class="sidebar-count" id="count-notes">0</span>
+            </button>
+          </nav>
         </div>
-    </div>
 
-    <!-- MODAL: Add Project / Sector -->
-    <div class="modal-overlay" id="project-modal" aria-hidden="true">
-        <div class="modal-card modal-sm card-border shiny-top">
-            <div class="modal-header">
-                <h3 class="text-gr-2">INITIALIZE NEW SECTOR</h3>
-                <button class="icon-btn modal-close-btn" id="project-modal-close">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
-            </div>
-            <form id="project-form" class="modal-form">
-                <div class="form-group">
-                    <label for="project-name">SECTOR NAME <span class="req">*</span></label>
-                    <input type="text" id="project-name" placeholder="e.g. Deep Space AI, Orbital Web" required />
-                </div>
-                <div class="form-group">
-                    <label>TELEMETRY COLOR BEACON</label>
-                    <div class="color-options">
-                        <label class="color-dot-label">
-                            <input type="radio" name="proj-color" value="#762aff" checked />
-                            <span class="color-dot" style="background-color: #762aff; box-shadow: 0 0 10px #762aff;"></span>
-                        </label>
-                        <label class="color-dot-label">
-                            <input type="radio" name="proj-color" value="#3b82f6" />
-                            <span class="color-dot" style="background-color: #3b82f6; box-shadow: 0 0 10px #3b82f6;"></span>
-                        </label>
-                        <label class="color-dot-label">
-                            <input type="radio" name="proj-color" value="#00e5ff" />
-                            <span class="color-dot" style="background-color: #00e5ff; box-shadow: 0 0 10px #00e5ff;"></span>
-                        </label>
-                        <label class="color-dot-label">
-                            <input type="radio" name="proj-color" value="#10b981" />
-                            <span class="color-dot" style="background-color: #10b981; box-shadow: 0 0 10px #10b981;"></span>
-                        </label>
-                        <label class="color-dot-label">
-                            <input type="radio" name="proj-color" value="#f59e0b" />
-                            <span class="color-dot" style="background-color: #f59e0b; box-shadow: 0 0 10px #f59e0b;"></span>
-                        </label>
-                        <label class="color-dot-label">
-                            <input type="radio" name="proj-color" value="#ff0055" />
-                            <span class="color-dot" style="background-color: #ff0055; box-shadow: 0 0 10px #ff0055;"></span>
-                        </label>
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" id="project-modal-cancel">
-                        <span>ABORT</span>
-                    </button>
-                    <button type="submit" class="btn-primary">
-                        <span>LAUNCH SECTOR</span>
-                    </button>
-                </div>
-            </form>
+        <!-- Trail Sectors (Projects) -->
+        <div class="sidebar-group">
+          <div class="sidebar-group-header">
+            <p class="sidebar-group-label">TRAIL SECTORS</p>
+            <button class="sidebar-add-proj-btn" id="btn-add-project" title="Add sector">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
+          <div class="sidebar-projects" id="sidebar-projects">
+            <!-- Populated by JS -->
+          </div>
         </div>
+
+        <!-- Progress Block -->
+        <div class="sidebar-progress-block">
+          <div class="sidebar-progress-label">
+            <span>Summit Progress</span>
+            <span id="sidebar-progress-pct">0%</span>
+          </div>
+          <div class="sidebar-progress-track">
+            <div class="sidebar-progress-bar" id="sidebar-progress-bar"></div>
+          </div>
+          <p class="sidebar-progress-sub" id="sidebar-progress-sub">Begin your ascent</p>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="sidebar-group sidebar-filter-group">
+          <p class="sidebar-group-label">FILTERS</p>
+          <select id="priority-filter" class="sidebar-select" aria-label="Priority filter">
+            <option value="all">All priorities</option>
+            <option value="p1">01 — Critical</option>
+            <option value="p2">02 — High</option>
+            <option value="p3">03 — Standard</option>
+            <option value="p4">04 — Routine</option>
+          </select>
+          <select id="sort-filter" class="sidebar-select" aria-label="Sort">
+            <option value="dueDate-asc">By due date</option>
+            <option value="priority-desc">By priority</option>
+            <option value="title-asc">By name A–Z</option>
+            <option value="created-desc">Most recent</option>
+          </select>
+        </div>
+
+      </aside>
+
+      <!-- ═══════════════════════════════════════════
+           MAIN WORKSPACE
+      ═══════════════════════════════════════════ -->
+      <main class="main-content" id="main-content">
+
+        <!-- HERO BANNER (to-top.ch hero style) -->
+        <section class="hero-section" id="hero-section">
+          <div class="hero-inner">
+            <div class="hero-text-col">
+              <p class="hero-eyebrow" id="hero-date">SATURDAY, 06 SEPTEMBER 2026</p>
+              <h1 class="hero-heading" id="hero-heading">
+                WHERE DO YOU<br>WANT TO GO?
+              </h1>
+              <p class="hero-subtext" id="hero-quote">Every great journey begins with a single step. Plan yours.</p>
+              <div class="hero-stats-row">
+                <div class="hero-stat">
+                  <strong id="hero-stat-active">0</strong>
+                  <span>Active tasks</span>
+                </div>
+                <div class="hero-stat-divider"></div>
+                <div class="hero-stat">
+                  <strong id="hero-stat-done">0</strong>
+                  <span>Summited</span>
+                </div>
+                <div class="hero-stat-divider"></div>
+                <div class="hero-stat">
+                  <strong id="hero-stat-pct">0%</strong>
+                  <span>To the summit</span>
+                </div>
+              </div>
+              <button class="btn-gold hero-cta" id="hero-cta-btn">
+                Start Climbing <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </button>
+            </div>
+            <div class="hero-visual-col">
+              <!-- Mountain SVG Illustration -->
+              <svg class="hero-mountain-svg" viewBox="0 0 480 320" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Sky gradient background -->
+                <defs>
+                  <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#0D352E"/>
+                    <stop offset="100%" stop-color="#1A4A3E"/>
+                  </linearGradient>
+                  <linearGradient id="mountGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#2A6055"/>
+                    <stop offset="100%" stop-color="#0D352E"/>
+                  </linearGradient>
+                  <linearGradient id="snowGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#ffffff"/>
+                    <stop offset="100%" stop-color="#e8f4e8"/>
+                  </linearGradient>
+                </defs>
+                <rect width="480" height="320" fill="url(#skyGrad)" rx="16"/>
+                <!-- Stars -->
+                <circle cx="80" cy="40" r="1.5" fill="#EFB300" opacity="0.8"/>
+                <circle cx="150" cy="25" r="1" fill="white" opacity="0.6"/>
+                <circle cx="320" cy="35" r="1.5" fill="white" opacity="0.7"/>
+                <circle cx="400" cy="20" r="1" fill="#EFB300" opacity="0.5"/>
+                <circle cx="450" cy="55" r="1.5" fill="white" opacity="0.6"/>
+                <circle cx="30" cy="70" r="1" fill="white" opacity="0.5"/>
+                <!-- Far mountains (back) -->
+                <path d="M0 220 L80 120 L160 200 L240 100 L320 180 L400 110 L480 170 L480 320 L0 320Z" fill="#0D352E" opacity="0.6"/>
+                <!-- Main mountain -->
+                <path d="M60 280 L240 80 L420 280Z" fill="url(#mountGrad)"/>
+                <!-- Snow cap -->
+                <path d="M240 80 L210 150 L270 150Z" fill="url(#snowGrad)" opacity="0.95"/>
+                <!-- Gold flag at summit -->
+                <line x1="240" y1="80" x2="240" y2="55" stroke="#EFB300" stroke-width="2"/>
+                <polygon points="240,55 258,63 240,71" fill="#EFB300"/>
+                <!-- Path dots up the mountain -->
+                <circle cx="240" cy="258" r="4" fill="#EFB300" opacity="0.9"/>
+                <circle cx="238" cy="238" r="3.5" fill="#EFB300" opacity="0.8"/>
+                <circle cx="237" cy="218" r="3" fill="#EFB300" opacity="0.7"/>
+                <circle cx="236" cy="198" r="2.5" fill="#EFB300" opacity="0.6"/>
+                <circle cx="237" cy="178" r="2" fill="#EFB300" opacity="0.5"/>
+                <circle cx="238" cy="158" r="1.5" fill="#EFB300" opacity="0.4"/>
+                <!-- Hiker figure -->
+                <circle cx="241" cy="252" r="5" fill="#EFB300"/>
+                <line x1="241" y1="257" x2="241" y2="270" stroke="#EFB300" stroke-width="2"/>
+                <line x1="241" y1="262" x2="234" y2="268" stroke="#EFB300" stroke-width="2"/>
+                <line x1="241" y1="262" x2="248" y2="268" stroke="#EFB300" stroke-width="2"/>
+                <!-- Forest bottom -->
+                <path d="M0 280 L480 280 L480 320 L0 320Z" fill="#092520"/>
+                <!-- Tree silhouettes -->
+                <polygon points="20,280 30,255 40,280" fill="#0D352E"/>
+                <polygon points="35,280 47,248 59,280" fill="#0D352E"/>
+                <polygon points="380,280 392,252 404,280" fill="#0D352E"/>
+                <polygon points="400,280 414,260 428,280" fill="#0D352E"/>
+                <polygon points="440,280 452,250 464,280" fill="#0D352E"/>
+              </svg>
+
+              <!-- Progress Ring -->
+              <div class="hero-ring-wrap">
+                <svg class="hero-ring-svg" viewBox="0 0 100 100">
+                  <circle class="ring-track" cx="50" cy="50" r="42"/>
+                  <circle class="ring-progress" id="ring-fill" cx="50" cy="50" r="42"/>
+                </svg>
+                <div class="hero-ring-label">
+                  <strong id="ring-percent">0%</strong>
+                  <span>Summit</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Wavy divider bottom -->
+          <div class="hero-divider">
+            <svg viewBox="0 0 1440 80" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M0,40 C360,80 1080,0 1440,40 L1440,80 L0,80 Z" fill="#F5F4EF"/>
+            </svg>
+          </div>
+        </section>
+
+        <!-- ────────────────────────────────
+             TRAIL SECTORS (Project Cards)
+        ──────────────────────────────── -->
+        <section class="sectors-section" id="sectors-section">
+          <div class="section-container">
+            <div class="section-header-row">
+              <div>
+                <p class="section-eyebrow">YOUR JOURNEY</p>
+                <h2 class="section-heading">Active Trail Sectors</h2>
+              </div>
+              <button class="btn-outline" id="btn-add-project-main">+ Add Sector</button>
+            </div>
+            <div class="sectors-grid" id="focus-cards-grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ────────────────────────────────
+             TASKS PANE
+        ──────────────────────────────── -->
+        <div class="content-pane active" id="pane-tasks-view">
+          <div class="section-container">
+
+            <!-- View Title -->
+            <div class="view-header">
+              <div class="view-title-row">
+                <h2 class="view-title" id="view-title">Today's Route</h2>
+                <span class="view-badge" id="view-task-badge">0 tasks</span>
+              </div>
+              <div class="view-filter-row">
+                <select id="priority-filter-top" class="top-select">
+                  <option value="all">All priorities</option>
+                  <option value="p1">01 — Critical</option>
+                  <option value="p2">02 — High</option>
+                  <option value="p3">03 — Standard</option>
+                  <option value="p4">04 — Routine</option>
+                </select>
+                <select id="sort-filter-top" class="top-select">
+                  <option value="dueDate-asc">By due date</option>
+                  <option value="priority-desc">By priority</option>
+                  <option value="title-asc">By name A–Z</option>
+                  <option value="created-desc">Most recent</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- ──── ADD TASK CONSOLE ──── -->
+            <div class="task-creator-card" id="task-creator">
+              <div class="creator-top-row">
+                <div class="creator-check-placeholder">
+                  <i class="fa-solid fa-plus"></i>
+                </div>
+                <input type="text" id="task-input-title" placeholder="Add a new task — press Enter to save" />
+              </div>
+              <div class="creator-bottom-row" id="creator-bottom-row">
+                <input type="text" id="task-input-desc" placeholder="Notes, route details, or context..." />
+                <div class="creator-chips">
+                  <input type="date" id="task-input-date" class="chip-input" title="Due date" />
+                  <select id="task-input-priority" class="chip-select">
+                    <option value="p4">04 — Routine</option>
+                    <option value="p3">03 — Standard</option>
+                    <option value="p2" selected>02 — High</option>
+                    <option value="p1">01 — Critical</option>
+                  </select>
+                  <select id="task-input-project" class="chip-select">
+                    <!-- Populated by JS -->
+                  </select>
+                  <select id="task-input-tag" class="chip-select">
+                    <option value="general">General</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="work">Work</option>
+                    <option value="dev">Dev</option>
+                    <option value="design">Design</option>
+                  </select>
+                </div>
+                <div class="creator-actions">
+                  <button class="btn-ghost" id="cancel-inline-add">Clear</button>
+                  <button class="btn-gold" id="submit-inline-add">Add Task</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- ──── TASK LIST ──── -->
+            <div class="task-list-wrap">
+              <!-- Empty State -->
+              <div class="empty-state hidden" id="empty-state">
+                <div class="empty-mountain">▲</div>
+                <h3>The trail is clear</h3>
+                <p id="empty-state-msg">No tasks in this view. Add a new task above to begin your ascent.</p>
+              </div>
+
+              <!-- Active Tasks -->
+              <ul class="task-list" id="active-tasks-list"></ul>
+
+              <!-- Completed Accordion -->
+              <div class="completed-section hidden" id="completed-section">
+                <button class="completed-toggle" id="completed-toggle-btn">
+                  <i class="fa-solid fa-chevron-right toggle-arrow" id="completed-toggle-arrow"></i>
+                  <span>Summited (<span id="completed-accordion-count">0</span>)</span>
+                </button>
+                <ul class="task-list completed-list hidden" id="completed-tasks-list"></ul>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ────────────────────────────────
+             NOTES PANE
+        ──────────────────────────────── -->
+        <div class="content-pane" id="pane-notes-view">
+          <div class="section-container">
+            <div class="view-header">
+              <div class="view-title-row">
+                <h2 class="view-title">Trail Notes</h2>
+                <span class="view-badge" id="notes-badge">0 notes</span>
+              </div>
+              <button class="btn-gold" id="btn-add-note">+ New Note</button>
+            </div>
+            <div class="notes-grid" id="notes-grid">
+              <!-- Populated by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- ────────────────────────────────
+             CTA FOOTER SECTION (to-top.ch style)
+        ──────────────────────────────── -->
+        <section class="cta-section">
+          <div class="cta-inner">
+            <div class="cta-text">
+              <p class="section-eyebrow" style="color:#EFB300;">READY FOR THE JOURNEY?</p>
+              <h2 class="cta-heading">Come with us.<br>Let's climb new peaks together.</h2>
+              <p class="cta-subtext">No matter where you are on your journey, every task completed brings you one step closer to the summit.</p>
+            </div>
+            <div class="cta-mountain-icon">▲</div>
+          </div>
+        </section>
+
+        <!-- FOOTER -->
+        <footer class="site-footer">
+          <div class="footer-inner">
+            <div class="footer-brand">
+              <span class="footer-mountain">▲</span>
+              <span>SUMMITTASKS — for better productivity</span>
+            </div>
+            <p class="footer-sub">Built with purpose. Climb with clarity.</p>
+          </div>
+        </footer>
+
+      </main>
+    </div><!-- end layout-body -->
+  </div><!-- end page-wrapper -->
+
+  <!-- ═══════════════════════════════════════════
+       MODAL: Edit Task
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="edit-modal" aria-hidden="true">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Update Task</h3>
+        <button class="modal-close" id="edit-modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="edit-task-form" class="modal-form">
+        <input type="hidden" id="edit-task-id" />
+        <div class="form-group">
+          <label for="edit-title">Task name <span class="req">*</span></label>
+          <input type="text" id="edit-title" required />
+        </div>
+        <div class="form-group">
+          <label for="edit-desc">Notes / details</label>
+          <textarea id="edit-desc" rows="3"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-project">Trail sector</label>
+            <select id="edit-project"></select>
+          </div>
+          <div class="form-group">
+            <label for="edit-priority">Priority level</label>
+            <select id="edit-priority">
+              <option value="p1">01 — Critical</option>
+              <option value="p2">02 — High</option>
+              <option value="p3">03 — Standard</option>
+              <option value="p4">04 — Routine</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="edit-date">Due date</label>
+            <input type="date" id="edit-date" />
+          </div>
+          <div class="form-group">
+            <label for="edit-tag">Tag</label>
+            <select id="edit-tag">
+              <option value="general">General</option>
+              <option value="urgent">Urgent</option>
+              <option value="work">Work</option>
+              <option value="dev">Dev</option>
+              <option value="design">Design</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" id="edit-modal-cancel">Cancel</button>
+          <button type="submit" class="btn-gold">Save Changes</button>
+        </div>
+      </form>
     </div>
+  </div>
 
-    <!-- Toast Container -->
-    <div class="toast-box" id="toast-box"></div>
+  <!-- MODAL: Add Project / Sector -->
+  <div class="modal-overlay" id="project-modal" aria-hidden="true">
+    <div class="modal-card modal-sm">
+      <div class="modal-header">
+        <h3>New Trail Sector</h3>
+        <button class="modal-close" id="project-modal-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <form id="project-form" class="modal-form">
+        <div class="form-group">
+          <label for="project-name">Sector name <span class="req">*</span></label>
+          <input type="text" id="project-name" placeholder="e.g. Work, Personal, Health" required />
+        </div>
+        <div class="form-group">
+          <label>Trail color marker</label>
+          <div class="color-picker">
+            <label class="color-dot-label">
+              <input type="radio" name="proj-color" value="#0D352E" checked />
+              <span class="color-dot" style="background:#0D352E;"></span>
+            </label>
+            <label class="color-dot-label">
+              <input type="radio" name="proj-color" value="#EFB300" />
+              <span class="color-dot" style="background:#EFB300;"></span>
+            </label>
+            <label class="color-dot-label">
+              <input type="radio" name="proj-color" value="#2A6055" />
+              <span class="color-dot" style="background:#2A6055;"></span>
+            </label>
+            <label class="color-dot-label">
+              <input type="radio" name="proj-color" value="#e76f51" />
+              <span class="color-dot" style="background:#e76f51;"></span>
+            </label>
+            <label class="color-dot-label">
+              <input type="radio" name="proj-color" value="#264653" />
+              <span class="color-dot" style="background:#264653;"></span>
+            </label>
+            <label class="color-dot-label">
+              <input type="radio" name="proj-color" value="#457b9d" />
+              <span class="color-dot" style="background:#457b9d;"></span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn-ghost" id="project-modal-cancel">Cancel</button>
+          <button type="submit" class="btn-gold">Create Sector</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
-    <!-- Main JavaScript Logic -->
-    <script src="script.js"></script>
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-box"></div>
+
+  <script src="script.js"></script>
 </body>
 </html>
