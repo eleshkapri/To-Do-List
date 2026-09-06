@@ -213,6 +213,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnInstallApp  = $("btn-install-app");
   const liveAnnouncer  = $("aria-live-announcer");
 
+  // Shortcuts & 3D Celebration Modals
+  const btnShortcuts         = $("btn-shortcuts");
+  const mobileShortcutsLink  = $("mobile-shortcuts-link");
+  const shortcutsModal       = $("shortcuts-modal");
+  const shortcutsClose       = $("shortcuts-close");
+  const searchClearBtn       = $("search-clear-btn");
+
+  const summitModal          = $("summit-modal");
+  const summitCelebrateClose = $("summit-celebrate-close");
+  const celebrationCanvas    = $("celebration-canvas");
+  const hikerGroup           = $("hiker-group");
+  const overdueChipCount     = $("overdue-chip-count");
+  const quickChips           = $$(".quick-chip");
+
+  let activeQuickFilter  = "all";
+  let hasCelebratedToday = false;
+
   const toastWrap = $("toast-wrap");
 
   /* ════════════════════════════════════════════════
@@ -365,6 +382,19 @@ document.addEventListener("DOMContentLoaded", () => {
     if (ringPct)  ringPct.textContent = pct + "%";
     if (ctaRing)  ctaRing.style.strokeDashoffset = offset;
     if (ctaPct)   ctaPct.textContent = pct + "%";
+
+    // Dynamic 3D Mountain Climber Ascent
+    if (hikerGroup) {
+      const climberY = -(pct / 100) * 215;
+      const climberX = Math.sin((pct / 100) * Math.PI) * 14;
+      hikerGroup.style.transform = `translate3d(${climberX.toFixed(1)}px, ${climberY.toFixed(1)}px, 0)`;
+    }
+
+    // Trigger 3D Summit Celebration when 100% is reached
+    if (pct === 100 && total > 0 && !hasCelebratedToday) {
+      hasCelebratedToday = true;
+      setTimeout(() => triggerSummitCelebration(), 700);
+    }
   }
 
   /* ════════════════════════════════════════════════
@@ -455,6 +485,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (priorityFilter !== "all") list = list.filter(t => t.priority === priorityFilter);
 
+    // Quick filter chips matching
+    if (activeQuickFilter === "overdue") {
+      list = list.filter(t => !t.completed && t.dueDate && t.dueDate < td);
+    } else if (activeQuickFilter === "today") {
+      list = list.filter(t => t.dueDate === td);
+    } else if (activeQuickFilter === "p1") {
+      list = list.filter(t => t.priority === "p1");
+    } else if (activeQuickFilter === "has-notes") {
+      list = list.filter(t => t.description && t.description.trim().length > 0);
+    }
+
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       list = list.filter(t =>
@@ -482,6 +523,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const active = all.filter(t => !t.completed);
     const done   = all.filter(t => t.completed);
 
+    // Update overdue counter badge
+    const td = todayStr();
+    const overdueCount = tasks.filter(t => !t.completed && t.dueDate && t.dueDate < td).length;
+    if (overdueChipCount) {
+      overdueChipCount.textContent = overdueCount;
+      overdueChipCount.classList.toggle("hidden", overdueCount === 0);
+    }
+
     // View title
     const viewLabels = {
       today: "Today's Route", upcoming: "Upcoming Trail",
@@ -495,7 +544,7 @@ document.addEventListener("DOMContentLoaded", () => {
       emptyState.classList.remove("hidden");
       emptyMsg.textContent = currentView === "completed"
         ? "No summited tasks yet. Complete a task to see it here."
-        : "No tasks here. Add one above to begin your ascent.";
+        : "No tasks match this route. Add one above to begin your ascent.";
     } else {
       emptyState.classList.add("hidden");
     }
@@ -513,6 +562,8 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       completedWrap.classList.add("hidden");
     }
+
+    init3DTilt();
   }
 
   function buildTaskRow(task) {
@@ -531,10 +582,12 @@ document.addEventListener("DOMContentLoaded", () => {
         <i class="fa-solid fa-check"></i>
       </button>
       <div class="task-body">
-        <p class="task-name">${esc(task.title)}</p>
+        <p class="task-name" title="Double click to edit">${esc(task.title)}</p>
         ${task.description ? `<p class="task-note">${esc(task.description)}</p>` : ""}
         <div class="task-chips-row">
-          <span class="t-chip known-badge ${prioCls[task.priority] || "priority-p4"}">${prioLabels[task.priority] || ""}</span>
+          <span class="t-chip known-badge ${prioCls[task.priority] || "priority-p4"} interactive" data-act="cycle-prio" title="Click to cycle priority (${prioLabels[task.priority]})">
+            ${prioLabels[task.priority] || ""}
+          </span>
           <span class="t-chip t-chip-proj">
             <span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${proj.color};"></span>
             ${esc(proj.name)}
@@ -557,12 +610,22 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
 
     li.querySelector(".task-check").addEventListener("click", () => toggleDone(task.id));
-    li.querySelectorAll(".t-action").forEach(btn => {
+    li.querySelector(".task-name").addEventListener("dblclick", () => openEditModal(task.id));
+
+    li.querySelectorAll(".t-action, .interactive").forEach(btn => {
       btn.addEventListener("click", () => {
         const act = btn.dataset.act;
         if (act === "star")   toggleStar(task.id);
         if (act === "edit")   openEditModal(task.id);
         if (act === "delete") deleteTask(task.id);
+        if (act === "cycle-prio") {
+          const prioOrder = ["p4", "p3", "p2", "p1"];
+          const nextIdx = (prioOrder.indexOf(task.priority) + 1) % prioOrder.length;
+          task.priority = prioOrder[nextIdx];
+          save(K.TASKS, tasks);
+          refresh();
+          toast(`Priority set to ${prioLabels[task.priority]}`);
+        }
       });
     });
 
@@ -1172,16 +1235,68 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   });
 
+  // Search Clear Button & Input
+  globalSearch?.addEventListener("input", () => {
+    if (searchClearBtn) {
+      searchClearBtn.classList.toggle("hidden", !globalSearch.value);
+    }
+  });
+  searchClearBtn?.addEventListener("click", () => {
+    globalSearch.value = "";
+    searchQuery = "";
+    searchClearBtn.classList.add("hidden");
+    globalSearch.focus();
+    renderTasks();
+  });
+
+  // Quick Filter Chips Click Listeners
+  quickChips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      quickChips.forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      activeQuickFilter = chip.dataset.qfilter || "all";
+      renderTasks();
+    });
+  });
+
+  // Shortcuts Modal Listeners
+  btnShortcuts?.addEventListener("click", () => openModal(shortcutsModal));
+  mobileShortcutsLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    mobileMenu.classList.remove("open");
+    hamburgerBtn.classList.remove("open");
+    openModal(shortcutsModal);
+  });
+  shortcutsClose?.addEventListener("click", () => closeModal(shortcutsModal));
+
+  // 3D Summit Celebration Modal Close
+  summitCelebrateClose?.addEventListener("click", () => closeModal(summitModal));
+
   // Keyboard shortcuts
   window.addEventListener("keydown", e => {
     if (["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)) return;
     if (e.key === "n" || e.key === "N") { e.preventDefault(); switchToSection("tasks-section"); setTimeout(() => taskTitleInput.focus(), 500); }
     if (e.key === "/")                  { e.preventDefault(); globalSearch.focus(); }
+    if (e.key === "?" || (e.shiftKey && e.key === "/")) {
+      e.preventDefault();
+      shortcutsModal.classList.contains("open") ? closeModal(shortcutsModal) : openModal(shortcutsModal);
+    }
+    if (e.key === "b" || e.key === "B") {
+      e.preventDefault();
+      backupModal.classList.contains("open") ? closeModal(backupModal) : (updateStorageMeter(), openModal(backupModal));
+    }
+    if (e.key === "1") { e.preventDefault(); currentView = "today"; setActiveTab("today"); refresh(); }
+    if (e.key === "2") { e.preventDefault(); currentView = "upcoming"; setActiveTab("upcoming"); refresh(); }
+    if (e.key === "3") { e.preventDefault(); currentView = "starred"; setActiveTab("starred"); refresh(); }
+    if (e.key === "4") { e.preventDefault(); currentView = "inbox"; setActiveTab("inbox"); refresh(); }
+    if (e.key === "5") { e.preventDefault(); currentView = "completed"; setActiveTab("completed"); refresh(); }
     if (e.key === "Escape")             {
       closeModal(editModal);
       closeModal(sectorModal);
       closeModal(backupModal);
       closeModal(confirmModal);
+      closeModal(shortcutsModal);
+      closeModal(summitModal);
       mobileMenu.classList.remove("open");
       hamburgerBtn.classList.remove("open");
     }
@@ -1350,12 +1465,111 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ════════════════════════════════════════════════
+     3D TILT ENGINE WITH SPECULAR GLARE
+  ════════════════════════════════════════════════ */
+  function init3DTilt() {
+    if (!window.matchMedia("(pointer: fine)").matches) return;
+
+    const tiltTargets = $$(".sector-card, .sign-card, .hero-mountain-wrap, .task-item, .task-add-card, .settings-card, .celebration-box");
+    tiltTargets.forEach(card => {
+      if (card.dataset.tiltInit) return;
+      card.dataset.tiltInit = "1";
+      card.classList.add("tilt-card-3d");
+
+      let glare = card.querySelector(".card-glare");
+      if (!glare) {
+        glare = document.createElement("div");
+        glare.className = "card-glare";
+        card.appendChild(glare);
+      }
+
+      card.addEventListener("mousemove", e => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const cx = rect.width / 2;
+        const cy = rect.height / 2;
+
+        const rotateX = ((y - cy) / cy) * -7;
+        const rotateY = ((x - cx) / cx) * 7;
+
+        card.style.transform = `perspective(1000px) rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) scale3d(1.015, 1.015, 1.015)`;
+        glare.style.background = `radial-gradient(circle at ${(x / rect.width * 100).toFixed(1)}% ${(y / rect.height * 100).toFixed(1)}%, rgba(255,255,255,0.22) 0%, rgba(255,255,255,0) 65%)`;
+      });
+
+      card.addEventListener("mouseleave", () => {
+        card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)";
+      });
+    });
+  }
+
+  /* ════════════════════════════════════════════════
+     3D SUMMIT CELEBRATION & GOLDEN CONFETTI
+  ════════════════════════════════════════════════ */
+  function triggerSummitCelebration() {
+    if (!summitModal) return;
+    openModal(summitModal);
+    announce("Summit Conquered! 100% of your route is complete today.");
+    runGoldConfetti();
+  }
+
+  function runGoldConfetti() {
+    if (!celebrationCanvas) return;
+    const ctx = celebrationCanvas.getContext("2d");
+    celebrationCanvas.width = window.innerWidth;
+    celebrationCanvas.height = window.innerHeight;
+
+    const colors = ["#EFB300", "#FFE277", "#FFF3BF", "#C99600", "#FFFFFF"];
+    const particles = Array.from({ length: 85 }, () => ({
+      x: Math.random() * celebrationCanvas.width,
+      y: Math.random() * -celebrationCanvas.height,
+      size: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      speedY: Math.random() * 3 + 2.5,
+      speedX: Math.random() * 2 - 1,
+      rotation: Math.random() * 360,
+      rotSpeed: Math.random() * 4 - 2
+    }));
+
+    let frameCount = 0;
+    function renderConfetti() {
+      ctx.clearRect(0, 0, celebrationCanvas.width, celebrationCanvas.height);
+      particles.forEach(p => {
+        p.y += p.speedY;
+        p.x += p.speedX;
+        p.rotation += p.rotSpeed;
+
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate((p.rotation * Math.PI) / 180);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
+        ctx.restore();
+
+        if (p.y > celebrationCanvas.height) {
+          p.y = -10;
+          p.x = Math.random() * celebrationCanvas.width;
+        }
+      });
+
+      frameCount++;
+      if (frameCount < 280 && summitModal.classList.contains("open")) {
+        requestAnimationFrame(renderConfetti);
+      } else {
+        ctx.clearRect(0, 0, celebrationCanvas.width, celebrationCanvas.height);
+      }
+    }
+    renderConfetti();
+  }
+
+  /* ════════════════════════════════════════════════
      INIT
   ════════════════════════════════════════════════ */
   applyTheme(isDark);
   taskDateInput.value = todayStr();
   setActiveTab("today");
   initSlider();
+  init3DTilt();
   refresh();
 
   // Initial scroll-reveal pass
