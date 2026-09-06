@@ -1,20 +1,499 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dark Mode To-Do List</title>
+    <title>DXM // SPACE — Taskflow Mission Control</title>
+    
+    <!-- Fonts: Poppins (Regular, Semi-bold, Bold, Extra-Bold Italic) & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,400;0,500;0,600;0,700;0,800;1,700;1,800;1,900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="container">
-      <h1>To-Do List</h1>
-      <div class="input-container">
-        <input type="text" id="todo-input" placeholder="Add a new task..." />
-        <button id="add-task-btn">Add Task</button>
-      </div>
-      <ul id="todo-list"></ul>
+</head>
+<body class="dxm-space-theme">
+    <!-- Starfield Interactive Canvas -->
+    <canvas id="starfield-canvas"></canvas>
+
+    <!-- Meteor / Shooting Star Speed Lines -->
+    <div class="speed-line speed-line-1"></div>
+    <div class="speed-line speed-line-2"></div>
+    <div class="speed-line speed-line-3"></div>
+
+    <!-- Cosmic Nebula Glow Orbs -->
+    <div class="nebula-glow nebula-purple"></div>
+    <div class="nebula-glow nebula-blue"></div>
+
+    <div class="app-container">
+        <!-- Mobile Sidebar Backdrop -->
+        <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+        <!-- Left Mission Control Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-top">
+                <div class="brand">
+                    <div class="brand-logo-frame">
+                        <span class="brand-glyph">✦</span>
+                    </div>
+                    <div class="brand-info">
+                        <h2>DXM<span class="brand-dot">.</span>SPACE</h2>
+                        <span class="brand-sub">TASK ENGINE // V3.0</span>
+                    </div>
+                </div>
+                <button class="icon-btn mobile-close-btn" id="mobile-sidebar-close" aria-label="Close sidebar">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Primary Action: New Transmission -->
+            <button class="btn-primary sidebar-action-btn" id="sidebar-quick-add-btn">
+                <span>+ NEW TASK</span>
+                <kbd class="shortcut-key">N</kbd>
+            </button>
+
+            <!-- Cosmic Search Console -->
+            <div class="search-box">
+                <i class="fa-solid fa-satellite-dish search-icon"></i>
+                <input type="text" id="global-search" placeholder="SEARCH SIGNALS... ( / )" />
+            </div>
+
+            <!-- Smart Views Navigation -->
+            <div class="nav-group">
+                <div class="group-title">TELEMETRY VIEWS</div>
+                <nav class="nav-list">
+                    <button class="nav-btn active" data-view="today">
+                        <span class="nav-btn-left">
+                            <span class="nav-icon-box">
+                                <i class="fa-solid fa-crosshairs"></i>
+                            </span>
+                            <span>CURRENT ORBIT</span>
+                        </span>
+                        <span class="nav-count" id="count-today">0</span>
+                    </button>
+                    <button class="nav-btn" data-view="upcoming">
+                        <span class="nav-btn-left">
+                            <span class="nav-icon-box">
+                                <i class="fa-solid fa-forward-fast"></i>
+                            </span>
+                            <span>TRAJECTORY</span>
+                        </span>
+                        <span class="nav-count" id="count-upcoming">0</span>
+                    </button>
+                    <button class="nav-btn" data-view="starred">
+                        <span class="nav-btn-left">
+                            <span class="nav-icon-box">
+                                <i class="fa-solid fa-bolt"></i>
+                            </span>
+                            <span>CRITICAL PRIORITY</span>
+                        </span>
+                        <span class="nav-count" id="count-starred">0</span>
+                    </button>
+                    <button class="nav-btn" data-view="inbox">
+                        <span class="nav-btn-left">
+                            <span class="nav-icon-box">
+                                <i class="fa-solid fa-terminal"></i>
+                            </span>
+                            <span>SIGNAL INBOX</span>
+                        </span>
+                        <span class="nav-count" id="count-inbox">0</span>
+                    </button>
+                    <button class="nav-btn" data-view="completed">
+                        <span class="nav-btn-left">
+                            <span class="nav-icon-box">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </span>
+                            <span>ARCHIVED LOGS</span>
+                        </span>
+                        <span class="nav-count" id="count-completed">0</span>
+                    </button>
+                    <button class="nav-btn" data-view="notes">
+                        <span class="nav-btn-left">
+                            <span class="nav-icon-box">
+                                <i class="fa-solid fa-meteor"></i>
+                            </span>
+                            <span>TRANSMISSIONS</span>
+                        </span>
+                        <span class="nav-count" id="count-notes">0</span>
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Trajectories / Projects Section -->
+            <div class="nav-group">
+                <div class="group-header">
+                    <span class="group-title">ACTIVE SECTORS</span>
+                    <button class="icon-btn-xs" id="btn-add-project" title="Add sector">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                </div>
+                <div class="projects-list" id="projects-list">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Tags Filter Section -->
+            <div class="nav-group">
+                <div class="group-title">SIGNAL TAGS</div>
+                <div class="tags-list" id="tags-list">
+                    <button class="tag-chip active" data-tag="all">#ALL</button>
+                    <button class="tag-chip" data-tag="urgent">#URGENT</button>
+                    <button class="tag-chip" data-tag="dev">#DEV</button>
+                    <button class="tag-chip" data-tag="design">#DESIGN</button>
+                    <button class="tag-chip" data-tag="work">#WORK</button>
+                </div>
+            </div>
+
+            <!-- Sidebar Footer with Cosmic Audio & Telemetry -->
+            <div class="sidebar-bottom">
+                <div class="streak-card card-border shiny-top">
+                    <div class="streak-icon">
+                        <i class="fa-solid fa-satellite"></i>
+                    </div>
+                    <div class="streak-info">
+                        <strong>STATION STREAK</strong>
+                        <small>5 ORBITS CONTINUOUS</small>
+                    </div>
+                </div>
+
+                <div class="footer-controls">
+                    <!-- dxm.space Audio Equalizer Player Toggle -->
+                    <button class="music-play-btn" id="music-play" title="Toggle Cosmic Atmosphere Synthesizer">
+                        <div class="eq-bar"></div>
+                        <div class="eq-bar"></div>
+                        <div class="eq-bar"></div>
+                        <div class="eq-bar"></div>
+                        <div class="eq-bar"></div>
+                    </button>
+
+                    <span class="status-indicator">
+                        <span class="pulse-dot"></span> ORBITAL LINK OK
+                    </span>
+
+                    <button class="theme-btn" id="theme-toggle" title="Toggle Light / Cosmic mode">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Task Workspace -->
+        <main class="main-workspace">
+            <!-- Top Action Header -->
+            <div class="workspace-top-bar">
+                <div class="top-bar-left">
+                    <button class="icon-btn mobile-menu-btn" id="mobile-sidebar-toggle" aria-label="Toggle menu">
+                        <i class="fa-solid fa-bars"></i>
+                    </button>
+                    <div class="date-chip">
+                        <i class="fa-regular fa-clock"></i>
+                        <span id="header-date-text">EARTH TIME // 2026.09.06</span>
+                    </div>
+                </div>
+
+                <div class="top-bar-right">
+                    <select id="priority-filter" class="clean-select" aria-label="Filter priority">
+                        <option value="all">✦ ALL THRUST LEVELS</option>
+                        <option value="p1">🔴 P1 // CRITICAL</option>
+                        <option value="p2">🟡 P2 // ELEVATED</option>
+                        <option value="p3">🔵 P3 // STANDARD</option>
+                        <option value="p4">⚪ P4 // ROUTINE</option>
+                    </select>
+
+                    <select id="sort-filter" class="clean-select" aria-label="Sort tasks">
+                        <option value="dueDate-asc">TARGET HORIZON</option>
+                        <option value="priority-desc">THRUST PRIORITY</option>
+                        <option value="title-asc">IDENTIFIER (A-Z)</option>
+                        <option value="created-desc">LOGGED RECENT</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Hero Mission Overview Banner (dxm.space Style) -->
+            <section class="hero-banner shiny-border shiny-top" id="hero-banner">
+                <div class="hero-content">
+                    <div class="hero-greeting">
+                        <span class="eyebrow eyebrow--signal">✦ TRANSMISSION RECEIVED // STATION ALPHA</span>
+                        <h1 class="hero-h1 text-gr-1" id="hero-greeting-text">WELCOME ABOARD, ELESH</h1>
+                        <p class="hero-quote" id="hero-quote">"Navigate the digital frontier with precision and momentum."</p>
+                    </div>
+
+                    <div class="hero-meta-row">
+                        <div class="hero-stat-pill">
+                            <i class="fa-solid fa-radar"></i>
+                            <span id="hero-stat-active">0 ACTIVE MISSIONS</span>
+                        </div>
+                        <div class="hero-stat-pill">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span id="hero-stat-done">0 LOGGED</span>
+                        </div>
+                        <div class="hero-stat-pill">
+                            <i class="fa-solid fa-gauge-high"></i>
+                            <span id="hero-stat-status">OPTIMAL VELOCITY</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cosmic Radial Telemetry Ring -->
+                <div class="hero-progress-wrapper">
+                    <div class="radial-ring-box">
+                        <svg class="radial-progress-svg" viewBox="0 0 100 100">
+                            <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
+                            <circle class="ring-fill" id="ring-fill" cx="50" cy="50" r="42"></circle>
+                        </svg>
+                        <div class="ring-center-text">
+                            <strong id="ring-percent">0%</strong>
+                            <span>ORBIT</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Active Sectors & Trajectories (Project Cards Row) -->
+            <section class="focus-projects-section" id="focus-projects-section">
+                <div class="section-title-row">
+                    <div class="title-with-icon">
+                        <span class="cosmic-spark">✦</span>
+                        <h3 class="text-gr-2">ACTIVE SECTORS & TRAJECTORIES</h3>
+                    </div>
+                    <span class="section-hint">MISSION PROGRESS OVERVIEW</span>
+                </div>
+                <div class="focus-cards-grid" id="focus-cards-grid">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </section>
+
+            <!-- Tasks Pane -->
+            <div class="content-pane active" id="pane-tasks-view">
+                <div class="view-header-row">
+                    <div class="view-title-wrap">
+                        <h2 class="text-gr-3" id="view-title">CURRENT ORBIT TASKS</h2>
+                        <span class="view-badge-pill" id="view-task-badge">0 MISSIONS</span>
+                    </div>
+                </div>
+
+                <!-- Cosmic Command Deck: Quick Task Input -->
+                <div class="inline-task-creator card-border shiny-top" id="inline-creator">
+                    <div class="creator-input-row">
+                        <div class="circle-placeholder">
+                            <i class="fa-solid fa-plus"></i>
+                        </div>
+                        <input type="text" id="task-input-title" placeholder="INITIALIZE NEW TASK... (PRESS ENTER TO TRANSMIT)" />
+                    </div>
+                    <div class="creator-details-row" id="creator-details">
+                        <input type="text" id="task-input-desc" placeholder="Mission specifications, coordinates, or notes (optional)..." />
+                        <div class="creator-chips-row">
+                            <div class="chip-group">
+                                <input type="date" id="task-input-date" class="chip-date-input" title="Target Date" />
+                                
+                                <select id="task-input-priority" class="chip-select">
+                                    <option value="p4">⚪ P4 // ROUTINE</option>
+                                    <option value="p3">🔵 P3 // STANDARD</option>
+                                    <option value="p2" selected>🟡 P2 // ELEVATED</option>
+                                    <option value="p1">🔴 P1 // CRITICAL</option>
+                                </select>
+
+                                <select id="task-input-project" class="chip-select">
+                                    <!-- Populated dynamically -->
+                                </select>
+
+                                <select id="task-input-tag" class="chip-select">
+                                    <option value="general">#GENERAL</option>
+                                    <option value="urgent">#URGENT</option>
+                                    <option value="work">#WORK</option>
+                                    <option value="dev">#DEV</option>
+                                    <option value="design">#DESIGN</option>
+                                </select>
+                            </div>
+                            <div class="creator-actions">
+                                <button type="button" class="btn-secondary" id="cancel-inline-add">
+                                    <span>CLEAR</span>
+                                </button>
+                                <button type="button" class="btn-primary" id="submit-inline-add">
+                                    <span>TRANSMIT TASK</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Task Groups / List -->
+                <div class="tasks-container">
+                    <!-- Empty State -->
+                    <div class="empty-state hidden" id="empty-state">
+                        <div class="empty-illustration-box">
+                            <i class="fa-solid fa-satellite"></i>
+                        </div>
+                        <h3>ALL TRAJECTORIES CLEAR</h3>
+                        <p id="empty-state-msg">Zero pending missions in this sector. Log a new task above.</p>
+                    </div>
+
+                    <!-- Active Task List -->
+                    <ul class="task-list" id="active-tasks-list">
+                        <!-- Injected dynamically -->
+                    </ul>
+
+                    <!-- Completed Tasks Accordion -->
+                    <div class="completed-section" id="completed-section">
+                        <button class="completed-toggle-btn" id="completed-toggle-btn">
+                            <i class="fa-solid fa-chevron-right toggle-arrow" id="completed-toggle-arrow"></i>
+                            <span>MISSION ARCHIVE (<span id="completed-accordion-count">0</span> LOGGED)</span>
+                        </button>
+                        <ul class="task-list completed-list hidden" id="completed-tasks-list">
+                            <!-- Injected dynamically -->
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes & Transmissions Pane -->
+            <div class="content-pane" id="pane-notes-view">
+                <div class="notes-header">
+                    <div>
+                        <h2 class="text-gr-1">SIGNAL TRANSMISSIONS & NOTES</h2>
+                        <p>Raw mission logs, spontaneous brainstorms, and telemetry notes.</p>
+                    </div>
+                    <button class="btn-primary" id="btn-add-note">
+                        <span>+ LOG TRANSMISSION</span>
+                    </button>
+                </div>
+                <div class="notes-grid" id="notes-grid">
+                    <!-- Injected dynamically -->
+                </div>
+            </div>
+        </main>
     </div>
+
+    <!-- MODAL: Edit Task -->
+    <div class="modal-overlay" id="edit-modal" aria-hidden="true">
+        <div class="modal-card card-border shiny-top">
+            <div class="modal-header">
+                <h3 class="text-gr-1">UPDATE MISSION LOG</h3>
+                <button class="icon-btn modal-close-btn" id="edit-modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="edit-task-form" class="modal-form">
+                <input type="hidden" id="edit-task-id" />
+
+                <div class="form-group">
+                    <label for="edit-title">MISSION OBJECTIVE <span class="req">*</span></label>
+                    <input type="text" id="edit-title" required />
+                </div>
+
+                <div class="form-group">
+                    <label for="edit-desc">TELEMETRY & SPECIFICATIONS</label>
+                    <textarea id="edit-desc" rows="3"></textarea>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="edit-project">SECTOR / PROJECT</label>
+                        <select id="edit-project"></select>
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="edit-priority">THRUST PRIORITY</label>
+                        <select id="edit-priority">
+                            <option value="p1">🔴 P1 // CRITICAL</option>
+                            <option value="p2">🟡 P2 // ELEVATED</option>
+                            <option value="p3">🔵 P3 // STANDARD</option>
+                            <option value="p4">⚪ P4 // ROUTINE</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group flex-1">
+                        <label for="edit-date">TARGET HORIZON</label>
+                        <input type="date" id="edit-date" />
+                    </div>
+                    <div class="form-group flex-1">
+                        <label for="edit-tag">SIGNAL TAG</label>
+                        <select id="edit-tag">
+                            <option value="general">#GENERAL</option>
+                            <option value="urgent">#URGENT</option>
+                            <option value="work">#WORK</option>
+                            <option value="dev">#DEV</option>
+                            <option value="design">#DESIGN</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="edit-modal-cancel">
+                        <span>CANCEL</span>
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <span>COMMIT CHANGES</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Add Project / Sector -->
+    <div class="modal-overlay" id="project-modal" aria-hidden="true">
+        <div class="modal-card modal-sm card-border shiny-top">
+            <div class="modal-header">
+                <h3 class="text-gr-2">INITIALIZE NEW SECTOR</h3>
+                <button class="icon-btn modal-close-btn" id="project-modal-close">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <form id="project-form" class="modal-form">
+                <div class="form-group">
+                    <label for="project-name">SECTOR NAME <span class="req">*</span></label>
+                    <input type="text" id="project-name" placeholder="e.g. Deep Space AI, Orbital Web" required />
+                </div>
+                <div class="form-group">
+                    <label>TELEMETRY COLOR BEACON</label>
+                    <div class="color-options">
+                        <label class="color-dot-label">
+                            <input type="radio" name="proj-color" value="#762aff" checked />
+                            <span class="color-dot" style="background-color: #762aff; box-shadow: 0 0 10px #762aff;"></span>
+                        </label>
+                        <label class="color-dot-label">
+                            <input type="radio" name="proj-color" value="#3b82f6" />
+                            <span class="color-dot" style="background-color: #3b82f6; box-shadow: 0 0 10px #3b82f6;"></span>
+                        </label>
+                        <label class="color-dot-label">
+                            <input type="radio" name="proj-color" value="#00e5ff" />
+                            <span class="color-dot" style="background-color: #00e5ff; box-shadow: 0 0 10px #00e5ff;"></span>
+                        </label>
+                        <label class="color-dot-label">
+                            <input type="radio" name="proj-color" value="#10b981" />
+                            <span class="color-dot" style="background-color: #10b981; box-shadow: 0 0 10px #10b981;"></span>
+                        </label>
+                        <label class="color-dot-label">
+                            <input type="radio" name="proj-color" value="#f59e0b" />
+                            <span class="color-dot" style="background-color: #f59e0b; box-shadow: 0 0 10px #f59e0b;"></span>
+                        </label>
+                        <label class="color-dot-label">
+                            <input type="radio" name="proj-color" value="#ff0055" />
+                            <span class="color-dot" style="background-color: #ff0055; box-shadow: 0 0 10px #ff0055;"></span>
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="project-modal-cancel">
+                        <span>ABORT</span>
+                    </button>
+                    <button type="submit" class="btn-primary">
+                        <span>LAUNCH SECTOR</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-box" id="toast-box"></div>
+
+    <!-- Main JavaScript Logic -->
     <script src="script.js"></script>
-  </body>
+</body>
 </html>
