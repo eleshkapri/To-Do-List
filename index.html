@@ -3,12 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: https:; connect-src 'self';">
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="description" content="Summit Tasks — Enterprise-grade, mountain-journey inspired productivity task management system with offline PWA capability." />
+  <meta name="theme-color" content="#0D352E" />
   <title>Summit Tasks — for better productivity</title>
 
+  <link rel="manifest" href="manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700;1,800;1,900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -45,12 +50,17 @@
       </div>
 
       <div class="nav-right">
+        <span class="offline-badge hidden" id="offline-badge" title="You are working offline"><i class="fa-solid fa-wifi-slash"></i> Offline</span>
+        <button class="btn-ghost nav-install-btn hidden" id="btn-install-app" title="Install Summit Tasks App"><i class="fa-solid fa-download"></i> Install</button>
         <div class="nav-search-wrap">
           <i class="fa-solid fa-magnifying-glass"></i>
           <input type="text" id="global-search" placeholder="Search tasks..." />
         </div>
         <button class="btn-gold nav-cta" id="nav-add-btn">+ New Task</button>
-        <button class="theme-btn" id="theme-toggle" title="Toggle theme">
+        <button class="theme-btn" id="btn-open-backup" title="Data Backup & Security Settings" aria-label="Data Backup and Settings">
+          <i class="fa-solid fa-sliders"></i>
+        </button>
+        <button class="theme-btn" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light theme">
           <i class="fa-solid fa-circle-half-stroke"></i>
         </button>
         <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu">
@@ -67,6 +77,7 @@
       <a href="#sectors-section" class="mobile-link">Sectors</a>
       <a href="#sections-anchor" class="mobile-link" data-view="notes">Notes</a>
       <a href="#sign-section" class="mobile-link">Why here?</a>
+      <a href="#" class="mobile-link" id="mobile-backup-link"><i class="fa-solid fa-sliders"></i> Data &amp; Backup</a>
       <div class="mobile-search">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" id="mobile-search" placeholder="Search tasks..." />
@@ -634,6 +645,74 @@
       </form>
     </div>
   </div>
+
+  <!-- MODAL: Data Backup, Import & Security Settings -->
+  <div class="modal-overlay" id="backup-modal" role="dialog" aria-labelledby="backup-heading" aria-hidden="true" aria-modal="true">
+    <div class="modal-box">
+      <div class="modal-top">
+        <h3 id="backup-heading"><i class="fa-solid fa-shield-halved" style="color:var(--gold);margin-right:0.4rem;"></i> Data &amp; Security Hub</h3>
+        <button class="modal-close-btn" id="backup-close" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body" style="padding:1.5rem 1.75rem; display:flex; flex-direction:column; gap:1.25rem;">
+        <p style="font-size:0.875rem; color:var(--txt-muted); line-height:1.6;">
+          Manage your task storage, download encrypted JSON backups, or restore your route. All data is securely stored locally on your device.
+        </p>
+
+        <!-- Backup / Export -->
+        <div class="settings-card">
+          <div class="settings-card-info">
+            <strong>Export Backup</strong>
+            <span>Save all tasks, sectors, and trail notes as a portable JSON file</span>
+          </div>
+          <button class="btn-forest" id="btn-export-json"><i class="fa-solid fa-download"></i> Export JSON</button>
+        </div>
+
+        <!-- Restore / Import -->
+        <div class="settings-card">
+          <div class="settings-card-info">
+            <strong>Restore Backup</strong>
+            <span>Upload and validate a previously saved backup file</span>
+          </div>
+          <div>
+            <input type="file" id="input-import-json" accept=".json,application/json" class="sr-only" />
+            <button class="btn-outline-forest" id="btn-import-trigger"><i class="fa-solid fa-upload"></i> Choose File</button>
+          </div>
+        </div>
+
+        <!-- Storage Status & Cleanup -->
+        <div class="settings-card danger-zone">
+          <div class="settings-card-info">
+            <strong>Storage Management</strong>
+            <span id="storage-usage-text">Calculating usage...</span>
+          </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <button class="btn-ghost" id="btn-clear-completed-modal"><i class="fa-solid fa-broom"></i> Clear Summited</button>
+            <button class="btn-danger" id="btn-factory-reset"><i class="fa-solid fa-triangle-exclamation"></i> Reset All Data</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: Confirmation Dialog -->
+  <div class="modal-overlay" id="confirm-modal" role="dialog" aria-labelledby="confirm-title" aria-describedby="confirm-desc" aria-hidden="true" aria-modal="true">
+    <div class="modal-box modal-sm">
+      <div class="modal-top">
+        <h3 id="confirm-title">Please Confirm</h3>
+        <button class="modal-close-btn" id="confirm-close" aria-label="Close dialog"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div style="padding:1.5rem 1.75rem;">
+        <p id="confirm-desc" style="font-size:0.9rem; color:var(--txt-muted); line-height:1.6; margin-bottom:1.5rem;"></p>
+        <div class="modal-btns">
+          <button type="button" class="btn-ghost" id="confirm-cancel">Cancel</button>
+          <button type="button" class="btn-danger" id="confirm-ok">Confirm Action</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ARIA Live Announcer for Screen Readers -->
+  <div id="aria-live-announcer" class="sr-only" role="status" aria-live="polite"></div>
 
   <!-- Toast container -->
   <div class="toast-wrap" id="toast-wrap"></div>

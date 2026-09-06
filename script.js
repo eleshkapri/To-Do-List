@@ -39,10 +39,64 @@ document.addEventListener("DOMContentLoaded", () => {
     { id:"n3", content:"Look into time-blocking for deep work sessions.", label:"Learning" }
   ];
 
-  let tasks    = JSON.parse(localStorage.getItem(K.TASKS)) || DEF_TASKS;
-  let projects = JSON.parse(localStorage.getItem(K.PROJS)) || DEF_PROJECTS;
-  let notes    = JSON.parse(localStorage.getItem(K.NOTES)) || DEF_NOTES;
-  let isDark   = localStorage.getItem(K.THEME) === "dark";
+  /* ════════════════════════════════════════════════
+     SECURE STORAGE & SCHEMA ENGINE
+  ════════════════════════════════════════════════ */
+  const SecureStorage = {
+    get(key, fallback, validator = null) {
+      try {
+        const raw = localStorage.getItem(key);
+        if (raw === null) return fallback;
+        const parsed = JSON.parse(raw);
+        if (validator && typeof validator === "function" && !validator(parsed)) {
+          console.warn(`[Security] Schema validation failed for ${key}. Using fallback.`);
+          return fallback;
+        }
+        return parsed;
+      } catch (err) {
+        console.warn(`[Security] Storage read error on ${key}:`, err);
+        return fallback;
+      }
+    },
+    set(key, val) {
+      try {
+        localStorage.setItem(key, JSON.stringify(val));
+        return true;
+      } catch (err) {
+        console.error(`[Security] Storage quota exceeded or disabled for ${key}:`, err);
+        toast("⚠️ Storage limit reached or cookies disabled.");
+        return false;
+      }
+    },
+    calcUsage() {
+      let total = 0;
+      try {
+        for (let k in localStorage) {
+          if (Object.prototype.hasOwnProperty.call(localStorage, k)) {
+            total += (k.length + (localStorage[k] ? localStorage[k].length : 0)) * 2;
+          }
+        }
+      } catch (e) {}
+      if (total < 1024) return `${total} B`;
+      return `${(total / 1024).toFixed(1)} KB`;
+    }
+  };
+
+  const validateTasks = (data) => Array.isArray(data) && data.every(t => t && typeof t === "object" && typeof t.title === "string");
+  const validateProjects = (data) => Array.isArray(data) && data.every(p => p && typeof p === "object" && typeof p.name === "string");
+  const validateNotes = (data) => Array.isArray(data) && data.every(n => n && typeof n === "object");
+
+  function generateId(prefix = "item") {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return `${prefix}-${crypto.randomUUID()}`;
+    }
+    return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  }
+
+  let tasks    = SecureStorage.get(K.TASKS, DEF_TASKS, validateTasks);
+  let projects = SecureStorage.get(K.PROJS, DEF_PROJECTS, validateProjects);
+  let notes    = SecureStorage.get(K.NOTES, DEF_NOTES, validateNotes);
+  let isDark   = SecureStorage.get(K.THEME, "light") === "dark";
 
   let currentView     = "today";
   let priorityFilter  = "all";
@@ -133,6 +187,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const sectorName   = $("sector-name");
   const sectorClose  = $("sector-close");
   const sectorCancel = $("sector-cancel");
+
+  // Backup & Security Hub
+  const btnOpenBackup          = $("btn-open-backup");
+  const mobileBackupLink       = $("mobile-backup-link");
+  const backupModal            = $("backup-modal");
+  const backupClose            = $("backup-close");
+  const btnExportJson          = $("btn-export-json");
+  const btnImportTrigger       = $("btn-import-trigger");
+  const inputImportJson        = $("input-import-json");
+  const btnClearCompletedModal = $("btn-clear-completed-modal");
+  const btnFactoryReset        = $("btn-factory-reset");
+  const storageUsageText       = $("storage-usage-text");
+
+  // Confirmation Modal
+  const confirmModal   = $("confirm-modal");
+  const confirmTitle   = $("confirm-title");
+  const confirmDesc    = $("confirm-desc");
+  const confirmOk      = $("confirm-ok");
+  const confirmCancel  = $("confirm-cancel");
+  const confirmClose   = $("confirm-close");
+
+  // PWA & Accessibility
+  const offlineBadge   = $("offline-badge");
+  const btnInstallApp  = $("btn-install-app");
+  const liveAnnouncer  = $("aria-live-announcer");
 
   const toastWrap = $("toast-wrap");
 
@@ -520,23 +599,50 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   /* ════════════════════════════════════════════════
-     TASK CRUD
+     ACCESSIBILITY & SCREEN READER ANNOUNCER
+  ════════════════════════════════════════════════ */
+  function announce(msg) {
+    if (liveAnnouncer) {
+      liveAnnouncer.textContent = "";
+      setTimeout(() => { liveAnnouncer.textContent = msg; }, 50);
+    }
+  }
+
+  /* ════════════════════════════════════════════════
+     TASK CRUD (Secure & Validated)
   ════════════════════════════════════════════════ */
   function addTask(title, desc, projId, prio, dueDate, tag) {
-    if (!title.trim()) return false;
+    const cleanTitle = (title || "").trim();
+    if (!cleanTitle) {
+      toast("Please enter a task title");
+      return false;
+    }
+    if (cleanTitle.length > 200) {
+      toast("Task title cannot exceed 200 characters");
+      return false;
+    }
+
+    const cleanDesc = (desc || "").trim().slice(0, 2000);
+    const validPrio = ["p1", "p2", "p3", "p4"].includes(prio) ? prio : "p2";
+    const cleanTag = (tag || "general").toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 30);
+    const validDueDate = (dueDate && /^\d{4}-\d{2}-\d{2}$/.test(dueDate)) ? dueDate : todayStr();
+
     tasks.unshift({
-      id: "t" + Date.now(),
-      title: title.trim(),
-      description: desc.trim(),
-      project: projId || projects[0]?.id || "",
-      priority: prio || "p2",
-      dueDate: dueDate || todayStr(),
-      tag: tag || "general",
-      starred: false, completed: false,
+      id: generateId("task"),
+      title: cleanTitle,
+      description: cleanDesc,
+      project: projId || projects[0]?.id || "proj-1",
+      priority: validPrio,
+      dueDate: validDueDate,
+      tag: cleanTag,
+      starred: false,
+      completed: false,
       createdAt: new Date().toISOString()
     });
+
     save(K.TASKS, tasks);
     refresh();
+    announce(`Task "${cleanTitle}" added`);
     return true;
   }
 
@@ -546,7 +652,9 @@ document.addEventListener("DOMContentLoaded", () => {
     t.completed = !t.completed;
     save(K.TASKS, tasks);
     refresh();
+    const msg = t.completed ? `Task "${t.title}" summited! ▲` : `Task "${t.title}" returned to route`;
     toast(t.completed ? "Task summited! ▲" : "Back on the trail");
+    announce(msg);
   }
 
   function toggleStar(id) {
@@ -556,21 +664,25 @@ document.addEventListener("DOMContentLoaded", () => {
     save(K.TASKS, tasks);
     refresh();
     toast(t.starred ? "Priority flag set" : "Flag removed");
+    announce(t.starred ? `Task "${t.title}" marked as priority` : `Flag removed from "${t.title}"`);
   }
 
   function deleteTask(id) {
     const idx = tasks.findIndex(t => t.id === id);
     if (idx < 0) return;
     lastDeleted = tasks[idx];
+    const taskTitle = lastDeleted.title;
     tasks.splice(idx, 1);
     save(K.TASKS, tasks);
     refresh();
+    announce(`Task "${taskTitle}" deleted`);
     toast("Task removed", true, () => {
       tasks.push(lastDeleted);
       lastDeleted = null;
       save(K.TASKS, tasks);
       refresh();
       toast("Task restored");
+      announce(`Task "${taskTitle}" restored`);
     });
   }
 
@@ -588,20 +700,175 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function addProject(name, color) {
-    if (!name.trim()) return;
-    const p = { id: "proj-" + Date.now(), name: name.trim(), color: color || "#0D352E" };
+    const cleanName = (name || "").trim().slice(0, 50);
+    if (!cleanName) {
+      toast("Please enter a sector name");
+      return;
+    }
+    const safeColor = (color && /^#[0-9a-fA-F]{6}$/.test(color)) ? color : "#0D352E";
+    const p = { id: generateId("proj"), name: cleanName, color: safeColor };
     projects.push(p);
     save(K.PROJS, projects);
     populateProjectDropdowns();
     refresh();
     toast(`Sector "${p.name}" created`);
+    announce(`New sector "${p.name}" created`);
   }
 
   /* ════════════════════════════════════════════════
-     MODALS
+     ACCESSIBLE MODALS (Focus Trap & Restoration)
   ════════════════════════════════════════════════ */
-  function openModal(el)  { el.classList.add("open"); el.setAttribute("aria-hidden","false"); }
-  function closeModal(el) { el.classList.remove("open"); el.setAttribute("aria-hidden","true"); }
+  let lastFocusedElement = null;
+
+  function openModal(el) {
+    if (!el) return;
+    lastFocusedElement = document.activeElement;
+    el.classList.add("open");
+    el.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+
+    // Trap focus inside modal
+    const focusable = el.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusable.length > 0) {
+      setTimeout(() => focusable[0].focus(), 50);
+    }
+  }
+
+  function closeModal(el) {
+    if (!el) return;
+    el.classList.remove("open");
+    el.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+
+    if (lastFocusedElement && typeof lastFocusedElement.focus === "function") {
+      lastFocusedElement.focus();
+    }
+  }
+
+  // Focus trap Tab listener
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Tab") return;
+    const openModals = $$(".modal-overlay.open");
+    if (openModals.length === 0) return;
+    const currentModal = openModals[openModals.length - 1];
+    const focusable = currentModal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+    if (focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last  = focusable[focusable.length - 1];
+
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        last.focus();
+        e.preventDefault();
+      }
+    } else {
+      if (document.activeElement === last) {
+        first.focus();
+        e.preventDefault();
+      }
+    }
+  });
+
+  /* ════════════════════════════════════════════════
+     CONFIRMATION DIALOG ENGINE
+  ════════════════════════════════════════════════ */
+  let pendingConfirmAction = null;
+
+  function showConfirmDialog(title, desc, onConfirm) {
+    if (!confirmModal || !confirmTitle || !confirmDesc) return;
+    confirmTitle.textContent = title;
+    confirmDesc.textContent  = desc;
+    pendingConfirmAction     = onConfirm;
+    openModal(confirmModal);
+  }
+
+  confirmOk?.addEventListener("click", () => {
+    if (pendingConfirmAction) {
+      pendingConfirmAction();
+      pendingConfirmAction = null;
+    }
+    closeModal(confirmModal);
+  });
+  confirmCancel?.addEventListener("click", () => {
+    pendingConfirmAction = null;
+    closeModal(confirmModal);
+  });
+  confirmClose?.addEventListener("click", () => {
+    pendingConfirmAction = null;
+    closeModal(confirmModal);
+  });
+
+  /* ════════════════════════════════════════════════
+     DATA BACKUP & SECURITY HUB
+  ════════════════════════════════════════════════ */
+  function updateStorageMeter() {
+    if (storageUsageText) {
+      storageUsageText.textContent = `${SecureStorage.calcUsage()} used in local browser storage (${tasks.length} tasks, ${projects.length} sectors)`;
+    }
+  }
+
+  function exportData() {
+    const backupPayload = {
+      app: "Summit Tasks",
+      version: "2.0.0",
+      exportedAt: new Date().toISOString(),
+      tasks,
+      projects,
+      notes,
+      theme: isDark ? "dark" : "light"
+    };
+
+    const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href     = url;
+    a.download = `summit-tasks-backup-${todayStr()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast("Backup exported successfully! 📁");
+    announce("Data backup downloaded");
+  }
+
+  function importDataFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const payload = JSON.parse(event.target.result);
+        if (!payload || typeof payload !== "object") throw new Error("File does not contain valid JSON");
+        if (!Array.isArray(payload.tasks)) throw new Error("Backup file missing tasks array");
+
+        const cleanTasks = payload.tasks.filter(t => t && typeof t === "object" && typeof t.title === "string");
+        const cleanProjects = Array.isArray(payload.projects) && payload.projects.length > 0 ? payload.projects : DEF_PROJECTS;
+        const cleanNotes = Array.isArray(payload.notes) ? payload.notes : [];
+
+        showConfirmDialog(
+          "Restore Backup?",
+          `This will replace your current ${tasks.length} tasks with ${cleanTasks.length} tasks from the backup. Are you sure?`,
+          () => {
+            tasks    = cleanTasks;
+            projects = cleanProjects;
+            notes    = cleanNotes;
+
+            save(K.TASKS, tasks);
+            save(K.PROJS, projects);
+            save(K.NOTES, notes);
+
+            refresh();
+            closeModal(backupModal);
+            toast(`Restored ${tasks.length} tasks successfully! ✅`);
+            announce("Backup data successfully imported");
+          }
+        );
+      } catch (err) {
+        toast("Invalid backup file: " + err.message);
+      }
+    };
+    reader.readAsText(file);
+  }
 
   /* ════════════════════════════════════════════════
      SECTION SCROLL
@@ -649,10 +916,15 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ════════════════════════════════════════════════
      HELPERS
   ════════════════════════════════════════════════ */
-  function save(key, data) { localStorage.setItem(key, JSON.stringify(data)); }
+  function save(key, data) { SecureStorage.set(key, data); }
   function esc(s) {
-    if (!s) return "";
-    return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    if (s === null || s === undefined) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
   function formatDue(dateStr) {
     if (!dateStr) return { label:"", cls:"" };
@@ -674,6 +946,7 @@ document.addEventListener("DOMContentLoaded", () => {
     populateProjectDropdowns();
     renderTasks();
     renderNotes();
+    updateStorageMeter();
     observeReveal();
     $$(".title-split").forEach(initTitleSplit);
   }
@@ -826,10 +1099,77 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Add note
   btnAddNote.addEventListener("click", () => {
-    notes.unshift({ id:"n"+Date.now(), content:"", label:"New note" });
+    notes.unshift({ id: generateId("note"), content:"", label:"New note" });
     save(K.NOTES, notes);
     renderNotes();
     toast("New trail note added");
+    announce("New trail note added");
+  });
+
+  // Backup & Security Hub Controls
+  btnOpenBackup?.addEventListener("click", () => {
+    updateStorageMeter();
+    openModal(backupModal);
+  });
+
+  mobileBackupLink?.addEventListener("click", (e) => {
+    e.preventDefault();
+    updateStorageMeter();
+    mobileMenu.classList.remove("open");
+    hamburgerBtn.classList.remove("open");
+    openModal(backupModal);
+  });
+
+  backupClose?.addEventListener("click", () => closeModal(backupModal));
+
+  btnExportJson?.addEventListener("click", exportData);
+
+  btnImportTrigger?.addEventListener("click", () => inputImportJson?.click());
+
+  inputImportJson?.addEventListener("change", (e) => {
+    if (e.target.files && e.target.files[0]) {
+      importDataFile(e.target.files[0]);
+      inputImportJson.value = "";
+    }
+  });
+
+  btnClearCompletedModal?.addEventListener("click", () => {
+    const doneCount = tasks.filter(t => t.completed).length;
+    if (doneCount === 0) {
+      toast("No completed tasks to clear");
+      return;
+    }
+    showConfirmDialog(
+      "Clear Summited Tasks?",
+      `Are you sure you want to remove all ${doneCount} completed tasks? This cannot be undone.`,
+      () => {
+        tasks = tasks.filter(t => !t.completed);
+        save(K.TASKS, tasks);
+        refresh();
+        closeModal(backupModal);
+        toast(`Cleared ${doneCount} completed tasks! 🧹`);
+        announce(`Cleared ${doneCount} completed tasks`);
+      }
+    );
+  });
+
+  btnFactoryReset?.addEventListener("click", () => {
+    showConfirmDialog(
+      "Reset All Application Data?",
+      "⚠️ WARNING: This will permanently erase all custom tasks, sectors, and notes, and reset to original default state. Export a backup first if you want to keep your data!",
+      () => {
+        tasks    = DEF_TASKS;
+        projects = DEF_PROJECTS;
+        notes    = DEF_NOTES;
+        save(K.TASKS, tasks);
+        save(K.PROJS, projects);
+        save(K.NOTES, notes);
+        refresh();
+        closeModal(backupModal);
+        toast("Application reset to factory defaults! 🔄");
+        announce("Application reset to default state");
+      }
+    );
   });
 
   // Keyboard shortcuts
@@ -837,7 +1177,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (["INPUT","TEXTAREA","SELECT"].includes(document.activeElement.tagName)) return;
     if (e.key === "n" || e.key === "N") { e.preventDefault(); switchToSection("tasks-section"); setTimeout(() => taskTitleInput.focus(), 500); }
     if (e.key === "/")                  { e.preventDefault(); globalSearch.focus(); }
-    if (e.key === "Escape")             { closeModal(editModal); closeModal(sectorModal); mobileMenu.classList.remove("open"); hamburgerBtn.classList.remove("open"); }
+    if (e.key === "Escape")             {
+      closeModal(editModal);
+      closeModal(sectorModal);
+      closeModal(backupModal);
+      closeModal(confirmModal);
+      mobileMenu.classList.remove("open");
+      hamburgerBtn.classList.remove("open");
+    }
   });
 
   /* ════════════════════════════════════════════════
@@ -1019,5 +1366,57 @@ document.addEventListener("DOMContentLoaded", () => {
     const active = document.querySelector(".view-tab.active");
     if (active) moveTabSlider(active);
   });
+
+  /* ════════════════════════════════════════════════
+     PWA SERVICE WORKER & OFFLINE RESILIENCE
+  ════════════════════════════════════════════════ */
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").then((reg) => {
+        console.log("[PWA] ServiceWorker active with scope:", reg.scope);
+      }).catch((err) => {
+        console.info("[PWA] ServiceWorker skipped:", err);
+      });
+    });
+  }
+
+  // PWA Install Prompt
+  let deferredPrompt = null;
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (btnInstallApp) {
+      btnInstallApp.classList.remove("hidden");
+      btnInstallApp.addEventListener("click", async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const choice = await deferredPrompt.userChoice;
+        if (choice && choice.outcome === "accepted") {
+          toast("Summit Tasks installed! 🏔️");
+        }
+        deferredPrompt = null;
+        btnInstallApp.classList.add("hidden");
+      });
+    }
+  });
+
+  // Offline / Online Detection
+  function updateNetworkStatus() {
+    const isOffline = !navigator.onLine;
+    if (offlineBadge) {
+      offlineBadge.classList.toggle("hidden", !isOffline);
+    }
+  }
+  window.addEventListener("online", () => {
+    updateNetworkStatus();
+    toast("📡 Connection restored — all routes in sync!");
+    announce("Online connection restored");
+  });
+  window.addEventListener("offline", () => {
+    updateNetworkStatus();
+    toast("📡 Offline mode active — all tasks safely saved locally.");
+    announce("Offline mode active. All tasks safely saved locally.");
+  });
+  updateNetworkStatus();
 
 });
