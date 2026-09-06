@@ -1,3 +1,8 @@
 {
-  "liveServer.settings.port": 5501
+  "liveServer.settings.port": 5501,
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 500,
+  "editor.formatOnSave": false,
+  "liveServer.settings.donotShowInfoMsg": true,
+  "workbench.editor.enablePreview": false
 }

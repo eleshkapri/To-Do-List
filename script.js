@@ -149,11 +149,20 @@ document.addEventListener("DOMContentLoaded", () => {
   /* ════════════════════════════════════════════════
      SCROLL EFFECTS
   ════════════════════════════════════════════════ */
+  const scrollProgressBar = $("scroll-progress");
+
   window.addEventListener("scroll", () => {
     // Navbar scroll shadow
     navbar.classList.toggle("scrolled", window.scrollY > 20);
     // Scroll to top button
     scrollTopBtn.classList.toggle("show", window.scrollY > 500);
+
+    // Scroll progress bar (to-top.ch style indicator)
+    if (scrollProgressBar) {
+      const docH = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = docH > 0 ? (window.scrollY / docH) * 100 : 0;
+      scrollProgressBar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
+    }
   }, { passive: true });
 
   /* ════════════════════════════════════════════════
@@ -169,7 +178,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
 
   function observeReveal() {
-    $$(".scroll-reveal").forEach(el => revealObserver.observe(el));
+    $$(".scroll-reveal, .blur-reveal, .tilt-reveal, .scale-reveal").forEach(el => revealObserver.observe(el));
   }
 
   /* ════════════════════════════════════════════════
@@ -832,11 +841,174 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ════════════════════════════════════════════════
+     QUOTES SLIDER (to-top.ch dots and slide animation)
+  ════════════════════════════════════════════════ */
+  const quotesTrack = $("quotes-track");
+  const sliderDots  = $("slider-dots");
+  const sliderPrev  = $("slider-prev");
+  const sliderNext  = $("slider-next");
+  const slides      = $$(".quote-slide");
+  let currentSlide  = 0;
+  let slideInterval = null;
+
+  function updateSlider(index) {
+    if (!quotesTrack || slides.length === 0) return;
+    currentSlide = (index + slides.length) % slides.length;
+    quotesTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+    $$(".slider-dot").forEach((d, idx) => {
+      d.classList.toggle("active", idx === currentSlide);
+    });
+  }
+
+  function initSlider() {
+    if (!sliderDots || slides.length === 0) return;
+    sliderDots.innerHTML = "";
+    slides.forEach((_, idx) => {
+      const dot = document.createElement("button");
+      dot.className = `slider-dot${idx === 0 ? " active" : ""}`;
+      dot.setAttribute("aria-label", `Slide ${idx + 1}`);
+      dot.addEventListener("click", () => {
+        updateSlider(idx);
+        restartSlideTimer();
+      });
+      sliderDots.appendChild(dot);
+    });
+
+    sliderPrev?.addEventListener("click", () => {
+      updateSlider(currentSlide - 1);
+      restartSlideTimer();
+    });
+
+    sliderNext?.addEventListener("click", () => {
+      updateSlider(currentSlide + 1);
+      restartSlideTimer();
+    });
+
+    restartSlideTimer();
+
+    const sliderContainer = $("quotes-slider");
+    sliderContainer?.addEventListener("mouseenter", () => clearInterval(slideInterval));
+    sliderContainer?.addEventListener("mouseleave", restartSlideTimer);
+  }
+
+  function restartSlideTimer() {
+    clearInterval(slideInterval);
+    slideInterval = setInterval(() => {
+      updateSlider(currentSlide + 1);
+    }, 6000);
+  }
+
+  /* ════════════════════════════════════════════════
+     SIGN SECTION INTERACTIONS
+  ════════════════════════════════════════════════ */
+  const signStartBtn = $("sign-start-btn");
+  signStartBtn?.addEventListener("click", () => {
+    switchToSection("tasks-section");
+    setTimeout(() => taskTitleInput.focus(), 500);
+  });
+
+  const signCards = $$(".sign-card");
+  if (signCards.length >= 2) {
+    signCards[0].addEventListener("click", () => {
+      currentView = "today";
+      setActiveTab("today");
+      switchToSection("tasks-section");
+      refresh();
+    });
+    signCards[1].addEventListener("click", () => {
+      currentView = "upcoming";
+      setActiveTab("upcoming");
+      switchToSection("tasks-section");
+      refresh();
+    });
+  }
+
+  /* ════════════════════════════════════════════════
+     RIPPLE EFFECT
+  ════════════════════════════════════════════════ */
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".btn-gold, .btn-forest, .ripple-host, .sign-card");
+    if (!btn) return;
+    const rect = btn.getBoundingClientRect();
+    const ripple = document.createElement("span");
+    const diam = Math.max(rect.width, rect.height);
+    ripple.className = "ripple";
+    ripple.style.width = ripple.style.height = `${diam}px`;
+    ripple.style.left = `${e.clientX - rect.left - diam / 2}px`;
+    ripple.style.top = `${e.clientY - rect.top - diam / 2}px`;
+    btn.appendChild(ripple);
+    setTimeout(() => ripple.remove(), 600);
+  });
+
+  /* ════════════════════════════════════════════════
+     CURSOR FOLLOWER
+  ════════════════════════════════════════════════ */
+  const cursorDot  = $("cursor-dot");
+  const cursorRing = $("cursor-ring");
+
+  if (cursorDot && cursorRing && window.matchMedia("(pointer: fine)").matches) {
+    let mouseX = -100, mouseY = -100;
+    let ringX = -100, ringY = -100;
+
+    window.addEventListener("mousemove", e => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      document.body.classList.add("cursor-active");
+      cursorDot.style.left = `${mouseX}px`;
+      cursorDot.style.top = `${mouseY}px`;
+    }, { passive: true });
+
+    window.addEventListener("mouseleave", () => {
+      document.body.classList.remove("cursor-active");
+    });
+
+    function renderCursor() {
+      ringX += (mouseX - ringX) * 0.18;
+      ringY += (mouseY - ringY) * 0.18;
+      cursorRing.style.left = `${ringX}px`;
+      cursorRing.style.top = `${ringY}px`;
+      requestAnimationFrame(renderCursor);
+    }
+    requestAnimationFrame(renderCursor);
+
+    const hoverables = "a, button, input, select, textarea, .sector-card, .sign-card, .task-item, .st-button";
+    document.addEventListener("mouseover", e => {
+      if (e.target.closest(hoverables)) {
+        cursorDot.classList.add("hovered");
+        cursorRing.classList.add("hovered");
+      }
+    });
+    document.addEventListener("mouseout", e => {
+      if (e.target.closest(hoverables)) {
+        cursorDot.classList.remove("hovered");
+        cursorRing.classList.remove("hovered");
+      }
+    });
+  }
+
+  /* ════════════════════════════════════════════════
+     MOUSE PARALLAX (Hero & Sign)
+  ════════════════════════════════════════════════ */
+  if (window.matchMedia("(pointer: fine)").matches) {
+    window.addEventListener("mousemove", e => {
+      const cx = (e.clientX / window.innerWidth - 0.5) * 16;
+      const cy = (e.clientY / window.innerHeight - 0.5) * 16;
+
+      const mtn = document.querySelector(".hero-mountain-wrap");
+      if (mtn) mtn.style.transform = `translate3d(${cx}px, ${cy}px, 0)`;
+
+      const post = document.querySelector(".sign-post-wrap");
+      if (post) post.style.transform = `translate3d(${-cx * 0.6}px, ${-cy * 0.6}px, 0)`;
+    }, { passive: true });
+  }
+
+  /* ════════════════════════════════════════════════
      INIT
   ════════════════════════════════════════════════ */
   applyTheme(isDark);
   taskDateInput.value = todayStr();
   setActiveTab("today");
+  initSlider();
   refresh();
 
   // Initial scroll-reveal pass

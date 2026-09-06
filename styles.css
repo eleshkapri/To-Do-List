@@ -1191,3 +1191,446 @@ body.dark-mode .form-field textarea:focus { border-color: var(--gold); }
   .hero-stats { gap: 1rem; }
   .stat-num { font-size: 1.6rem; }
 }
+
+/* ═══════════════════════════════════════════════════════════
+   TO-TOP.CH EXACT ANIMATION CLASSES
+   Extracted from Webflow IX2 interactions
+═══════════════════════════════════════════════════════════ */
+
+/* ── 1. BLUR REVEAL (to-top.ch [data-w-id="618fca1a"] exact values)
+   opacity:0; translateY(20%); filter:blur(8px) → revealed
+────────────────────────────────────────────────────────── */
+.blur-reveal {
+  opacity: 0;
+  transform: translateY(20%);
+  filter: blur(8px);
+  transition:
+    opacity   0.7s var(--ease-out),
+    transform 0.7s var(--ease-out),
+    filter    0.6s ease;
+}
+.blur-reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0px);
+}
+.blur-reveal.delay-1 { transition-delay: 0.1s; }
+.blur-reveal.delay-2 { transition-delay: 0.2s; }
+.blur-reveal.delay-3 { transition-delay: 0.35s; }
+.blur-reveal.delay-4 { transition-delay: 0.5s; }
+
+/* ── 2. TILT REVEAL (to-top.ch [data-w-id="80622157"] — sign section)
+   opacity:0; rotateZ(6deg); width:80% → rotateZ(0); width:100%
+────────────────────────────────────────────────────────── */
+.tilt-reveal {
+  opacity: 0;
+  transform: rotateZ(6deg);
+  width: 80%;
+  transform-origin: bottom left;
+  transition:
+    opacity   0.8s var(--ease-out),
+    transform 0.9s var(--ease-out),
+    width     0.8s var(--ease-out);
+}
+.tilt-reveal.revealed {
+  opacity: 1;
+  transform: rotateZ(0deg);
+  width: 100%;
+}
+
+/* ── 3. SCALE POP-IN (to-top.ch service cards — scale3d(0.6,0.6,1) → 1)
+────────────────────────────────────────────────────────── */
+.scale-reveal {
+  opacity: 0;
+  transform: scale(0.6);
+  transition:
+    opacity   0.5s var(--ease-out),
+    transform 0.55s var(--ease-out);
+}
+.scale-reveal.revealed {
+  opacity: 1;
+  transform: scale(1);
+}
+.scale-reveal.delay-1 { transition-delay: 0.08s; }
+.scale-reveal.delay-2 { transition-delay: 0.16s; }
+.scale-reveal.delay-3 { transition-delay: 0.24s; }
+.scale-reveal.delay-4 { transition-delay: 0.32s; }
+
+/* ── 4. MAGNETIC BUTTON glow ring (to-top.ch CTA buttons) ── */
+.btn-gold, .btn-forest {
+  isolation: isolate;
+}
+.btn-gold::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  background: transparent;
+  border: 2px solid var(--gold);
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  pointer-events: none;
+}
+.btn-gold:hover::before {
+  opacity: 0.4;
+  transform: scale(1.06);
+}
+
+/* ── 5. RIPPLE EFFECT on click ────────────────────────── */
+.ripple-host { position: relative; overflow: hidden; }
+.ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+  transform: scale(0);
+  animation: rippleAnim 0.55s linear;
+  pointer-events: none;
+}
+@keyframes rippleAnim {
+  to { transform: scale(4); opacity: 0; }
+}
+
+/* ── 6. PARALLAX HERO LAYER ──────────────────────────── */
+.hero-section { perspective: 1px; }
+.hero-parallax-layer {
+  position: absolute;
+  inset: 0;
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* ── 7. FLOATING ANIMATION (mountain SVG gentle bob) ──── */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33%       { transform: translateY(-8px) rotate(0.5deg); }
+  66%       { transform: translateY(-4px) rotate(-0.5deg); }
+}
+.hero-mountain-svg { animation: slideInRight 0.8s var(--ease-out) 0.2s both, float 6s ease-in-out 1.2s infinite; }
+
+/* ── 8. SHIMMER EFFECT on gold button ───────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.btn-gold {
+  background: linear-gradient(
+    105deg,
+    var(--gold) 40%,
+    var(--gold-lt) 50%,
+    var(--gold) 60%
+  );
+  background-size: 200% auto;
+}
+.btn-gold:hover {
+  animation: shimmer 0.7s linear;
+}
+
+/* ── 9. SIGN SECTION (to-top.ch "Why are you here?" section) ── */
+.sign-section {
+  position: relative;
+  overflow: hidden;
+  background: var(--forest);
+  padding: 5rem 2rem;
+}
+.sign-inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+.sign-text-col .section-eyebrow { color: var(--gold); margin-bottom: 0.8rem; }
+.sign-heading {
+  font-size: clamp(2rem, 4vw, 3rem);
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  color: white;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
+  margin-bottom: 1rem;
+}
+.sign-sub { font-size: 1rem; color: rgba(255,255,255,0.6); line-height: 1.75; margin-bottom: 2rem; }
+
+/* Sign concern cards (to-top.ch "01 Staying healthy / 02 Shaping future") */
+.sign-cards { display: flex; flex-direction: column; gap: 1rem; margin-bottom: 2rem; }
+.sign-card {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-left: 4px solid var(--gold);
+  border-radius: var(--r-md);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  cursor: pointer;
+  transition: background 0.25s ease, transform 0.25s var(--ease-out), border-left-color 0.25s;
+}
+.sign-card:hover {
+  background: rgba(255,255,255,0.1);
+  transform: translateX(6px);
+  border-left-color: var(--gold-lt);
+}
+.sign-card-num {
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.15em;
+  color: var(--gold);
+  background: rgba(239,179,0,0.15);
+  padding: 3px 10px;
+  border-radius: var(--r-pill);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.sign-card-body h4 {
+  font-size: 1rem;
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  color: white;
+  margin-bottom: 0.3rem;
+}
+.sign-card-body ul { display: flex; flex-direction: column; gap: 0.25rem; }
+.sign-card-body li {
+  font-size: 0.825rem;
+  color: rgba(255,255,255,0.55);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.sign-card-body li::before {
+  content: '—';
+  color: var(--gold);
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+/* Signpost visual (to-top.ch tilt image on right) */
+.sign-visual-col {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sign-post-wrap {
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+}
+.sign-post-svg {
+  width: 100%;
+  filter: drop-shadow(0 24px 48px rgba(0,0,0,0.5));
+}
+
+/* ── 10. SLIDER / TESTIMONIALS (to-top.ch gold dots) ─── */
+.quotes-slider {
+  position: relative;
+  overflow: hidden;
+  padding: 0.5rem 0 2.5rem;
+}
+.quotes-track {
+  display: flex;
+  transition: transform 0.55s var(--ease-out);
+}
+.quote-slide {
+  min-width: 100%;
+  padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.quote-text {
+  font-size: 1.1rem;
+  font-style: italic;
+  font-weight: 600;
+  color: var(--txt);
+  line-height: 1.7;
+  max-width: 680px;
+}
+.quote-text::before { content: '"'; color: var(--gold); font-size: 2rem; line-height: 0.5; vertical-align: -0.5rem; margin-right: 0.2rem; }
+.quote-text::after  { content: '"'; color: var(--gold); font-size: 2rem; line-height: 0.5; vertical-align: -0.5rem; margin-left: 0.2rem; }
+.quote-author { font-size: 0.85rem; font-weight: 700; letter-spacing: 0.06em; color: var(--txt-muted); text-transform: uppercase; }
+
+/* Slider dots (to-top.ch exact: gold active, muted inactive) */
+.slider-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 1.5rem;
+}
+.slider-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--txt-muted);
+  border: none;
+  cursor: pointer;
+  transition: background 0.3s ease, width 0.3s ease, height 0.3s ease;
+  opacity: 0.5;
+}
+.slider-dot.active {
+  background: var(--gold);
+  width: 14px; height: 14px;
+  opacity: 1;
+}
+.slider-arrows {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 1rem;
+}
+.slider-arrow {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.12);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--txt-muted);
+  font-size: 0.875rem;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.slider-arrow:hover { border-color: var(--forest); color: var(--forest); background: rgba(13,53,46,0.06); }
+body.dark-mode .slider-arrow { border-color: rgba(255,255,255,0.12); color: rgba(255,255,255,0.5); }
+body.dark-mode .slider-arrow:hover { border-color: var(--gold); color: var(--gold); background: rgba(239,179,0,0.08); }
+
+/* ── 11. HOVER CARD IMAGE ZOOM (to-top.ch service cards) ── */
+.sector-card { overflow: hidden; }
+.sector-card-img-wrap {
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  margin-bottom: 1rem;
+  height: 0; /* hidden by default, used if image added */
+}
+.sector-card-img-wrap img {
+  width: 100%;
+  transition: transform 0.55s var(--ease-out);
+}
+.sector-card:hover .sector-card-img-wrap img { transform: scale(1.06); }
+
+/* ── 12. LINK HOVER UNDERLINE SLIDE (to-top.ch exact) ─── */
+.link-underline {
+  position: relative;
+  display: inline-block;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: 0;
+  width: 100%; height: 2px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 0.3s var(--ease);
+}
+.link-underline:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+/* ── 13. TASK ITEM LEFT GLOW on hover ──────────────────── */
+.task-item {
+  --glow: 0 0 0 0 transparent;
+  box-shadow: var(--glow);
+  transition:
+    transform 0.25s var(--ease-out),
+    box-shadow 0.25s ease,
+    border-color 0.2s;
+}
+.task-item:hover {
+  --glow: -4px 0 12px rgba(13,53,46,0.15);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.09), var(--glow);
+}
+body.dark-mode .task-item:hover {
+  --glow: -4px 0 12px rgba(239,179,0,0.12);
+}
+
+/* ── 14. SCROLL PROGRESS BAR at top of page ────────────── */
+.scroll-progress-bar {
+  position: fixed;
+  top: 0; left: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold-dk), var(--gold), var(--gold-lt));
+  width: 0%;
+  z-index: 9999;
+  transition: width 0.1s linear;
+  pointer-events: none;
+}
+
+/* ── 15. MARQUEE TICKER (to-top.ch logo strip style) ───── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.marquee-wrap {
+  overflow: hidden;
+  width: 100%;
+  padding: 1rem 0;
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 18s linear infinite;
+}
+.marquee-track:hover { animation-play-state: paused; }
+.marquee-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 1.5rem;
+  white-space: nowrap;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--txt-muted);
+}
+.marquee-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+
+/* ── 16. SECTION DIVIDER LINE (to-top.ch SVG lines) ─────── */
+.section-line {
+  width: 60px;
+  height: 3px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+  border-radius: 2px;
+  margin: 1rem auto;
+}
+
+/* ── 17. CURSOR FOLLOWER DOT ─────────────────────────────── */
+.cursor-dot {
+  position: fixed;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--gold);
+  pointer-events: none;
+  z-index: 9998;
+  transform: translate(-50%, -50%);
+  transition: transform 0.08s ease, opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
+  opacity: 0;
+  mix-blend-mode: multiply;
+}
+.cursor-ring {
+  position: fixed;
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--gold);
+  pointer-events: none;
+  z-index: 9997;
+  transform: translate(-50%, -50%);
+  transition: transform 0.18s ease, opacity 0.3s ease, width 0.3s ease, height 0.3s ease;
+  opacity: 0;
+}
+body.cursor-active .cursor-dot,
+body.cursor-active .cursor-ring { opacity: 1; }
+body.cursor-active .cursor-dot.hovered { width: 14px; height: 14px; }
+body.cursor-active .cursor-ring.hovered { width: 56px; height: 56px; opacity: 0.5; }
+
+@media (hover: none) {
+  .cursor-dot, .cursor-ring { display: none; }
+}
+
+/* ── 18. SIGN SECTION RESPONSIVE ─────────────────────────── */
+@media (max-width: 768px) {
+  .sign-inner { grid-template-columns: 1fr; gap: 2.5rem; }
+  .sign-visual-col { display: none; }
+  .quotes-slider { padding-bottom: 2rem; }
+}

@@ -41,6 +41,7 @@
         <a href="#sections-anchor" class="nav-link" data-view="starred" data-section="tasks-section">Priorities</a>
         <a href="#sectors-section" class="nav-link">Sectors</a>
         <a href="#sections-anchor" class="nav-link" data-view="notes" data-section="notes-section">Notes</a>
+        <a href="#sign-section" class="nav-link">Why here?</a>
       </div>
 
       <div class="nav-right">
@@ -65,6 +66,7 @@
       <a href="#sections-anchor" class="mobile-link" data-view="starred">Priorities</a>
       <a href="#sectors-section" class="mobile-link">Sectors</a>
       <a href="#sections-anchor" class="mobile-link" data-view="notes">Notes</a>
+      <a href="#sign-section" class="mobile-link">Why here?</a>
       <div class="mobile-search">
         <i class="fa-solid fa-magnifying-glass"></i>
         <input type="text" id="mobile-search" placeholder="Search tasks..." />
@@ -355,6 +357,7 @@
       <div class="section-label-row scroll-reveal">
         <p class="section-eyebrow">FIELD JOURNAL</p>
         <h2 class="section-h2 title-split">Trail Notes</h2>
+        <div class="section-line"></div>
         <p class="section-subp">Raw ideas, thoughts, and observations from the trail.</p>
       </div>
       <div class="notes-grid" id="notes-grid"></div>
@@ -365,6 +368,138 @@
       </div>
     </div>
   </section>
+
+  <!-- ═══════ SIGN SECTION (to-top.ch #sign-section exact style) ═══════ -->
+  <section class="sign-section" id="sign-section">
+    <div class="sign-inner">
+      <div class="sign-text-col">
+        <p class="section-eyebrow blur-reveal">WHY ARE YOU HERE?</p>
+        <h2 class="sign-heading blur-reveal delay-1">There are many<br><em>reasons to climb.</em><br>What moves you?</h2>
+        <p class="sign-sub blur-reveal delay-2">Every great journey starts with a reason. Which of these brings you here today?</p>
+        <div class="sign-cards">
+          <div class="sign-card scale-reveal delay-1">
+            <span class="sign-card-num">01</span>
+            <div class="sign-card-body">
+              <h4>Staying on track</h4>
+              <ul>
+                <li>Manage competing priorities</li>
+                <li>Never miss a deadline again</li>
+                <li>Build consistent daily habits</li>
+                <li>Clear the mental clutter</li>
+              </ul>
+            </div>
+          </div>
+          <div class="sign-card scale-reveal delay-2">
+            <span class="sign-card-num">02</span>
+            <div class="sign-card-body">
+              <h4>Shaping your future</h4>
+              <ul>
+                <li>Plan big goals step by step</li>
+                <li>Track meaningful progress</li>
+                <li>Turn ideas into action</li>
+                <li>Reach the next level</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <button class="btn-gold ripple-host blur-reveal delay-3" id="sign-start-btn">
+          Climb the summit with us <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+      <div class="sign-visual-col">
+        <div class="sign-post-wrap">
+          <svg class="sign-post-svg tilt-reveal" viewBox="0 0 360 480" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="postBg" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#1A4A3E"/>
+                <stop offset="100%" stop-color="#0D352E"/>
+              </linearGradient>
+            </defs>
+            <rect width="360" height="480" fill="url(#postBg)" rx="16"/>
+            <rect x="172" y="80" width="16" height="340" rx="4" fill="#2A6055"/>
+            <rect x="100" y="100" width="200" height="60" rx="8" fill="#EFB300"/>
+            <text x="200" y="135" text-anchor="middle" font-family="Montserrat,sans-serif" font-weight="800" font-size="13" fill="#0D352E" letter-spacing="1">TODAY'S TASKS</text>
+            <polygon points="300,130 320,115 320,145" fill="#EFB300"/>
+            <rect x="60" y="185" width="200" height="60" rx="8" fill="#2A6055"/>
+            <text x="160" y="220" text-anchor="middle" font-family="Montserrat,sans-serif" font-weight="800" font-size="13" fill="white" letter-spacing="1">UPCOMING</text>
+            <polygon points="60,215 40,200 40,230" fill="#2A6055"/>
+            <rect x="100" y="270" width="200" height="60" rx="8" fill="#0D352E" stroke="rgba(239,179,0,0.4)" stroke-width="2"/>
+            <text x="200" y="305" text-anchor="middle" font-family="Montserrat,sans-serif" font-weight="800" font-size="13" fill="#EFB300" letter-spacing="1">PRIORITIES</text>
+            <polygon points="300,300 320,285 320,315" fill="#EFB300"/>
+            <circle cx="180" cy="68" r="20" fill="#EFB300"/>
+            <text x="180" y="74" text-anchor="middle" font-size="18" fill="#0D352E">&#9650;</text>
+            <rect x="0" y="410" width="360" height="70" rx="0" fill="#092520"/>
+            <polygon points="40,410 55,380 70,410" fill="#0D352E"/>
+            <polygon points="290,410 305,378 320,410" fill="#0D352E"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ QUOTES SLIDER (to-top.ch testimonials — gold dots) ═══════ -->
+  <section class="page-section alt-bg" id="quotes-section">
+    <div class="section-inner">
+      <div class="section-label-row scroll-reveal">
+        <p class="section-eyebrow">TRAIL WISDOM</p>
+        <h2 class="section-h2 title-split">Words for the Journey</h2>
+        <div class="section-line"></div>
+      </div>
+      <div class="quotes-slider blur-reveal" id="quotes-slider">
+        <div class="quotes-track" id="quotes-track">
+          <div class="quote-slide">
+            <p class="quote-text">The summit is not the goal. The climb is.</p>
+            <p class="quote-author">— Mountain Wisdom</p>
+          </div>
+          <div class="quote-slide">
+            <p class="quote-text">Every task completed is a step closer to the peak. Every step matters.</p>
+            <p class="quote-author">— Trail Proverb</p>
+          </div>
+          <div class="quote-slide">
+            <p class="quote-text">Clarity of purpose turns effort into momentum. Know your why.</p>
+            <p class="quote-author">— Summit Seeker</p>
+          </div>
+          <div class="quote-slide">
+            <p class="quote-text">The trail to the top is not always straight. Trust the detours.</p>
+            <p class="quote-author">— Hiker's Journal</p>
+          </div>
+          <div class="quote-slide">
+            <p class="quote-text">Small steps. Relentless rhythm. The summit awaits those who persist.</p>
+            <p class="quote-author">— Climber's Creed</p>
+          </div>
+        </div>
+        <div class="slider-dots" id="slider-dots"></div>
+        <div class="slider-arrows">
+          <button class="slider-arrow" id="slider-prev"><i class="fa-solid fa-chevron-left"></i></button>
+          <button class="slider-arrow" id="slider-next"><i class="fa-solid fa-chevron-right"></i></button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ MARQUEE TICKER ═══════ -->
+  <div class="marquee-wrap" style="background:var(--forest);border-top:1px solid rgba(255,255,255,0.07);">
+    <div class="marquee-track">
+      <span class="marquee-item"><span class="marquee-dot"></span> Plan the Route</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Set Priorities</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Take Action</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Track Progress</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Reach the Summit</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Reflect &amp; Improve</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Plan the Route</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Set Priorities</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Take Action</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Track Progress</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Reach the Summit</span>
+      <span class="marquee-item"><span class="marquee-dot"></span> Reflect &amp; Improve</span>
+    </div>
+  </div>
+
+  <!-- Scroll progress bar -->
+  <div class="scroll-progress-bar" id="scroll-progress"></div>
+  <!-- Cursor follower -->
+  <div class="cursor-dot" id="cursor-dot"></div>
+  <div class="cursor-ring" id="cursor-ring"></div>
 
   <!-- ═══════ CTA SECTION (to-top.ch "Come with us" section) ═══════ -->
   <section class="cta-section">
