@@ -35,63 +35,209 @@
     </svg>
   </a>
 
-  <!-- ═══════ NAVBAR (to-top.ch sticky dark-green bar) ═══════ -->
-  <nav class="navbar" id="navbar">
-    <div class="nav-inner">
-      <a href="#hero" class="nav-logo">
-        <span class="nav-mountain">▲</span>
-        <span class="nav-brand">SUMMIT<strong>TASKS</strong></span>
-      </a>
+  <!-- ═══════ NAVBAR (to-top.ch floating pill capsule navbar) ═══════ -->
+  <header class="navbar" id="navbar" role="banner">
+    <div class="navbarcontainer">
+      <div class="navbar-content">
+        <!-- Logo -->
+        <a href="#hero" class="totop-top-logo" aria-label="Summit Tasks Home">
+          <span class="nav-mountain">▲</span>
+          <span class="nav-brand">SUMMIT<strong>TASKS</strong></span>
+        </a>
 
-      <div class="nav-links" id="nav-links">
-        <a href="#sections-anchor" class="nav-link" data-view="today" data-section="tasks-section">Today</a>
-        <a href="#sections-anchor" class="nav-link" data-view="upcoming" data-section="tasks-section">Upcoming</a>
-        <a href="#sections-anchor" class="nav-link" data-view="starred" data-section="tasks-section">Priorities</a>
-        <a href="#sectors-section" class="nav-link">Sectors</a>
-        <a href="#sections-anchor" class="nav-link" data-view="notes" data-section="notes-section">Notes</a>
-        <a href="#sign-section" class="nav-link">Why here?</a>
-      </div>
+        <!-- Desktop Navigation Links & Dropdowns -->
+        <nav class="menu-links-container" aria-label="Main Navigation">
+          <a href="#hero" class="top-nav-link" data-section="hero">
+            <span class="top-nav-text">Basecamp</span>
+          </a>
 
-      <div class="nav-right">
-        <span class="offline-badge hidden" id="offline-badge" title="You are working offline"><i class="fa-solid fa-wifi-slash"></i> Offline</span>
-        <button class="btn-ghost nav-install-btn hidden" id="btn-install-app" title="Install Summit Tasks App"><i class="fa-solid fa-download"></i> Install</button>
-        <div class="nav-search-wrap">
-          <i class="fa-solid fa-magnifying-glass"></i>
-          <input type="text" id="global-search" placeholder="Search tasks... ( / )" />
-          <button class="search-clear-btn hidden" id="search-clear-btn" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
+          <!-- Dropdown 1: Trail Views -->
+          <div class="nav-dropdown" data-delay="200">
+            <div class="dropdown-toggle" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+              <span class="top-nav-text">Trail Views</span>
+              <div class="icon-dropdown-toggle"><i class="fa-solid fa-chevron-down"></i></div>
+              <div class="nav-dropshadow"></div>
+            </div>
+            <div class="dropdown-list">
+              <a href="#sections-anchor" class="dropdown-link" data-view="today" data-section="tasks-section">
+                <div class="text-nav-link-box">
+                  <div class="nav-icon"><i class="fa-solid fa-compass"></i></div>
+                  <div class="nav-text-group">
+                    <span class="nav-text">Today's Route</span>
+                    <span class="nav-subtext">Active climbs due today</span>
+                  </div>
+                </div>
+                <div class="arrow-nav-icon"><i class="fa-solid fa-chevron-right"></i></div>
+              </a>
+              <a href="#sections-anchor" class="dropdown-link" data-view="upcoming" data-section="tasks-section">
+                <div class="text-nav-link-box">
+                  <div class="nav-icon"><i class="fa-regular fa-calendar"></i></div>
+                  <div class="nav-text-group">
+                    <span class="nav-text">Upcoming 7 Days</span>
+                    <span class="nav-subtext">Scheduled expedition roadmap</span>
+                  </div>
+                </div>
+                <div class="arrow-nav-icon"><i class="fa-solid fa-chevron-right"></i></div>
+              </a>
+              <a href="#sections-anchor" class="dropdown-link" data-view="starred" data-section="tasks-section">
+                <div class="text-nav-link-box">
+                  <div class="nav-icon"><i class="fa-solid fa-star"></i></div>
+                  <div class="nav-text-group">
+                    <span class="nav-text">Priority Summits</span>
+                    <span class="nav-subtext">01 Critical &amp; high stakes</span>
+                  </div>
+                </div>
+                <div class="arrow-nav-icon"><i class="fa-solid fa-chevron-right"></i></div>
+              </a>
+              <a href="#sections-anchor" class="dropdown-link" data-view="all" data-section="tasks-section">
+                <div class="text-nav-link-box">
+                  <div class="nav-icon"><i class="fa-solid fa-mountain"></i></div>
+                  <div class="nav-text-group">
+                    <span class="nav-text">All Routes</span>
+                    <span class="nav-subtext">Complete expedition list</span>
+                  </div>
+                </div>
+                <div class="arrow-nav-icon"><i class="fa-solid fa-chevron-right"></i></div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Dropdown 2: Expedition & Tools -->
+          <div class="nav-dropdown" data-delay="200">
+            <div class="dropdown-toggle" role="button" tabindex="0" aria-haspopup="true" aria-expanded="false">
+              <span class="top-nav-text">Expedition</span>
+              <div class="icon-dropdown-toggle"><i class="fa-solid fa-chevron-down"></i></div>
+              <div class="nav-dropshadow"></div>
+            </div>
+            <div class="dropdown-list">
+              <a href="#sectors-section" class="dropdown-link" data-section="sectors-section">
+                <div class="text-nav-link-box">
+                  <div class="nav-icon"><i class="fa-solid fa-cubes"></i></div>
+                  <div class="nav-text-group">
+                    <span class="nav-text">Alpine Sectors</span>
+                    <span class="nav-subtext">Work, personal &amp; health projects</span>
+                  </div>
+                </div>
+                <div class="arrow-nav-icon"><i class="fa-solid fa-chevron-right"></i></div>
+              </a>
+              <a href="#sections-anchor" class="dropdown-link" data-view="notes" data-section="notes-section">
+                <div class="text-nav-link-box">
+                  <div class="nav-icon"><i class="fa-solid fa-book-bookmark"></i></div>
+                  <div class="nav-text-group">
+                    <span class="nav-text">Trail Notes &amp; Docs</span>
+                    <span class="nav-subtext">Expedition logs and guidelines</span>
+                  </div>
+                </div>
+                <div class="arrow-nav-icon"><i class="fa-solid fa-chevron-right"></i></div>
+              </a>
+              <a href="#sign-section" class="dropdown-link" data-section="sign-section">
+                <div class="text-nav-link-box">
+                  <div class="nav-icon"><i class="fa-solid fa-compass-drafting"></i></div>
+                  <div class="nav-text-group">
+                    <span class="nav-text">Why Are You Here?</span>
+                    <span class="nav-subtext">Clarity, focus &amp; purpose</span>
+                  </div>
+                </div>
+                <div class="arrow-nav-icon"><i class="fa-solid fa-chevron-right"></i></div>
+              </a>
+            </div>
+          </div>
+
+          <!-- Direct Link -->
+          <a href="#sign-section" class="top-nav-link" data-section="sign-section">
+            <span class="top-nav-text">Why Here?</span>
+          </a>
+        </nav>
+
+        <!-- Right Side Nav Actions -->
+        <div class="right-side-nav">
+          <span class="offline-badge hidden" id="offline-badge" title="You are working offline"><i class="fa-solid fa-wifi-slash"></i> Offline</span>
+          <button class="btn-ghost nav-install-btn hidden" id="btn-install-app" title="Install Summit Tasks App"><i class="fa-solid fa-download"></i> Install</button>
+          
+          <div class="nav-search-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="global-search" placeholder="Search... ( / )" autocomplete="off" />
+            <button class="search-clear-btn hidden" id="search-clear-btn" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
+          </div>
+
+          <!-- to-top.ch Signature Gold CTA Button -->
+          <div class="top-navigation">
+            <button class="contact-us-top-button btn-3d-tactile" id="nav-add-btn">
+              <span class="button-name">+ New Task</span>
+            </button>
+          </div>
+
+          <!-- Utility Control Icons -->
+          <div class="nav-controls">
+            <button class="theme-btn" id="btn-shortcuts" title="Keyboard Shortcuts ( ? )" aria-label="Show Keyboard Shortcuts">
+              <i class="fa-solid fa-keyboard"></i>
+            </button>
+            <button class="theme-btn" id="btn-open-backup" title="Data Backup &amp; Security Settings" aria-label="Data Backup and Settings">
+              <i class="fa-solid fa-sliders"></i>
+            </button>
+            <button class="theme-btn" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light theme">
+              <i class="fa-solid fa-circle-half-stroke"></i>
+            </button>
+          </div>
+
+          <!-- to-top.ch Animated Mobile Burger Icon -->
+          <button class="menu-button" id="hamburger-btn" aria-label="Open menu" aria-expanded="false">
+            <div class="burger_menu_icon">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
+          </button>
         </div>
-        <button class="btn-gold nav-cta btn-3d-tactile" id="nav-add-btn">+ New Task</button>
-        <button class="theme-btn" id="btn-shortcuts" title="Keyboard Shortcuts ( ? )" aria-label="Show Keyboard Shortcuts">
-          <i class="fa-solid fa-keyboard"></i>
-        </button>
-        <button class="theme-btn" id="btn-open-backup" title="Data Backup & Security Settings" aria-label="Data Backup and Settings">
-          <i class="fa-solid fa-sliders"></i>
-        </button>
-        <button class="theme-btn" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark/light theme">
-          <i class="fa-solid fa-circle-half-stroke"></i>
-        </button>
-        <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu">
-          <span></span><span></span><span></span>
-        </button>
       </div>
-    </div>
 
-    <!-- Mobile dropdown menu -->
-    <div class="mobile-menu" id="mobile-menu">
-      <a href="#sections-anchor" class="mobile-link" data-view="today">Today</a>
-      <a href="#sections-anchor" class="mobile-link" data-view="upcoming">Upcoming</a>
-      <a href="#sections-anchor" class="mobile-link" data-view="starred">Priorities</a>
-      <a href="#sectors-section" class="mobile-link">Sectors</a>
-      <a href="#sections-anchor" class="mobile-link" data-view="notes">Notes</a>
-      <a href="#sign-section" class="mobile-link">Why here?</a>
-      <a href="#" class="mobile-link" id="mobile-shortcuts-link"><i class="fa-solid fa-keyboard"></i> Shortcuts ( ? )</a>
-      <a href="#" class="mobile-link" id="mobile-backup-link"><i class="fa-solid fa-sliders"></i> Data &amp; Backup</a>
-      <div class="mobile-search">
-        <i class="fa-solid fa-magnifying-glass"></i>
-        <input type="text" id="mobile-search" placeholder="Search tasks..." />
+      <!-- Mobile Dropdown Drawer -->
+      <div class="mobile-menu" id="mobile-menu">
+        <div class="mobile-menu-inner">
+          <div class="mobile-menu-links">
+            <a href="#hero" class="mobile-link" data-section="hero">
+              <i class="fa-solid fa-mountain"></i> Basecamp
+            </a>
+            <div class="mobile-menu-group-title">TRAIL VIEWS</div>
+            <a href="#sections-anchor" class="mobile-link" data-view="today">
+              <i class="fa-solid fa-compass"></i> Today's Route
+            </a>
+            <a href="#sections-anchor" class="mobile-link" data-view="upcoming">
+              <i class="fa-regular fa-calendar"></i> Upcoming 7 Days
+            </a>
+            <a href="#sections-anchor" class="mobile-link" data-view="starred">
+              <i class="fa-solid fa-star"></i> Priorities
+            </a>
+            <a href="#sections-anchor" class="mobile-link" data-view="all">
+              <i class="fa-solid fa-list-check"></i> All Routes
+            </a>
+            <div class="mobile-menu-group-title">EXPEDITION &amp; TOOLS</div>
+            <a href="#sectors-section" class="mobile-link" data-section="sectors-section">
+              <i class="fa-solid fa-cubes"></i> Alpine Sectors
+            </a>
+            <a href="#sections-anchor" class="mobile-link" data-view="notes">
+              <i class="fa-solid fa-book-bookmark"></i> Trail Notes &amp; Docs
+            </a>
+            <a href="#sign-section" class="mobile-link" data-section="sign-section">
+              <i class="fa-solid fa-compass-drafting"></i> Why Here? (Concerns)
+            </a>
+            <div class="mobile-menu-divider"></div>
+            <a href="#" class="mobile-link" id="mobile-shortcuts-link">
+              <i class="fa-solid fa-keyboard"></i> Shortcuts ( ? )
+            </a>
+            <a href="#" class="mobile-link" id="mobile-backup-link">
+              <i class="fa-solid fa-sliders"></i> Data &amp; Backup
+            </a>
+          </div>
+
+          <div class="mobile-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="mobile-search" placeholder="Search tasks..." />
+          </div>
+        </div>
       </div>
     </div>
-  </nav>
+  </header>
 
   <!-- ═══════ HERO SECTION (to-top.ch full-viewport hero) ═══════ -->
   <section class="hero-section" id="hero">

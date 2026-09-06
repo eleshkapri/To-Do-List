@@ -243,20 +243,37 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* ════════════════════════════════════════════════
-     SCROLL EFFECTS
+     SCROLL EFFECTS (to-top.ch scroll physics)
   ════════════════════════════════════════════════ */
   const scrollProgressBar = $("scroll-progress");
+  let lastScrollY = window.scrollY;
 
   window.addEventListener("scroll", () => {
-    // Navbar scroll shadow
-    navbar.classList.toggle("scrolled", window.scrollY > 20);
+    const currentScrollY = window.scrollY;
+
+    // Navbar compact pill mode
+    navbar.classList.toggle("scrolled", currentScrollY > 30);
+
+    // Directional hide / reveal (to-top.ch behavior)
+    const isMenuOpen = mobileMenu?.classList.contains("open") || document.querySelector(".nav-dropdown.open");
+    if (!isMenuOpen && currentScrollY > 240) {
+      if (currentScrollY > lastScrollY + 8) {
+        navbar.classList.add("nav-hidden");
+      } else if (currentScrollY < lastScrollY - 6) {
+        navbar.classList.remove("nav-hidden");
+      }
+    } else {
+      navbar.classList.remove("nav-hidden");
+    }
+    lastScrollY = currentScrollY;
+
     // Scroll to top button
-    scrollTopBtn.classList.toggle("show", window.scrollY > 500);
+    scrollTopBtn.classList.toggle("show", currentScrollY > 500);
 
     // Scroll progress bar (to-top.ch style indicator)
     if (scrollProgressBar) {
       const docH = document.documentElement.scrollHeight - window.innerHeight;
-      const pct = docH > 0 ? (window.scrollY / docH) * 100 : 0;
+      const pct = docH > 0 ? (currentScrollY / docH) * 100 : 0;
       scrollProgressBar.style.width = `${Math.min(100, Math.max(0, pct))}%`;
     }
   }, { passive: true });
@@ -944,7 +961,13 @@ document.addEventListener("DOMContentLoaded", () => {
   ════════════════════════════════════════════════ */
   function switchToSection(sectionId) {
     const sec = document.getElementById(sectionId);
-    if (sec) setTimeout(() => sec.scrollIntoView({ behavior:"smooth", block:"start" }), 100);
+    if (sec) {
+      setTimeout(() => {
+        const navOffset = 85;
+        const targetY = sec.getBoundingClientRect().top + window.scrollY - navOffset;
+        window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+      }, 100);
+    }
   }
 
   /* ════════════════════════════════════════════════
@@ -956,8 +979,8 @@ document.addEventListener("DOMContentLoaded", () => {
       t.classList.toggle("active", isActive);
       if (isActive) moveTabSlider(t);
     });
-    // Update nav links
-    $$(".nav-link[data-view]").forEach(l => l.classList.toggle("active", l.dataset.view === view));
+    // Update nav links & dropdown links
+    $$(".dropdown-link[data-view]").forEach(l => l.classList.toggle("active", l.dataset.view === view));
     $$(".mobile-link[data-view]").forEach(l => l.classList.toggle("active", l.dataset.view === view));
   }
 
@@ -1027,86 +1050,148 @@ document.addEventListener("DOMContentLoaded", () => {
   // Theme
   themeBtn.addEventListener("click", () => applyTheme(!isDark));
 
-  // Hamburger / mobile menu
-  hamburgerBtn.addEventListener("click", () => {
+  // Hamburger / mobile menu (to-top.ch animated pill expansion)
+  hamburgerBtn?.addEventListener("click", () => {
     const open = mobileMenu.classList.toggle("open");
     hamburgerBtn.classList.toggle("open", open);
+    hamburgerBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    document.querySelector(".navbarcontainer")?.classList.toggle("mobile-open", open);
   });
 
-  // Search (both bars with Clear Button)
-  [globalSearch, mobileSearch].forEach(inp => {
-    inp?.addEventListener("input", e => {
-      searchQuery = e.target.value;
-      if (searchClearBtn) searchClearBtn.classList.toggle("hidden", !searchQuery.trim());
-      renderTasks();
+  // Dropdown menus (to-top.ch style hover delay & keyboard/click support)
+  $$(".nav-dropdown").forEach(dd => {
+    let timeout = null;
+    const delay = parseInt(dd.dataset.delay || "200", 10);
+    const toggle = dd.querySelector(".dropdown-toggle");
+
+    dd.addEventListener("mouseenter", () => {
+      clearTimeout(timeout);
+      $$(".nav-dropdown.open").forEach(other => {
+        if (other !== dd) {
+          other.classList.remove("open");
+          other.querySelector(".dropdown-toggle")?.setAttribute("aria-expanded", "false");
+        }
+      });
+      dd.classList.add("open");
+      toggle?.setAttribute("aria-expanded", "true");
+    });
+
+    dd.addEventListener("mouseleave", () => {
+      timeout = setTimeout(() => {
+        dd.classList.remove("open");
+        toggle?.setAttribute("aria-expanded", "false");
+      }, delay);
+    });
+
+    toggle?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      const wasOpen = dd.classList.contains("open");
+      $$(".nav-dropdown.open").forEach(other => {
+        other.classList.remove("open");
+        other.querySelector(".dropdown-toggle")?.setAttribute("aria-expanded", "false");
+      });
+      if (!wasOpen) {
+        dd.classList.add("open");
+        toggle.setAttribute("aria-expanded", "true");
+      }
+    });
+
+    toggle?.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        toggle.click();
+      }
     });
   });
 
-  searchClearBtn?.addEventListener("click", () => {
-    if (globalSearch) globalSearch.value = "";
-    if (mobileSearch) mobileSearch.value = "";
-    searchQuery = "";
-    searchClearBtn.classList.add("hidden");
-    renderTasks();
-    globalSearch?.focus();
+  // Outside click & Escape to close dropdowns and mobile menu
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".nav-dropdown")) {
+      $$(".nav-dropdown.open").forEach(dd => {
+        dd.classList.remove("open");
+        dd.querySelector(".dropdown-toggle")?.setAttribute("aria-expanded", "false");
+      });
+    }
   });
 
-  // Interactive Priority Strip click listeners
-  $$(".known-badge[data-filter-prio]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const prio = btn.dataset.filterPrio;
-      if (!prio) return;
-      priorityFilter = prio;
-      if (prioFilter) prioFilter.value = prio;
-      switchToSection("tasks-section");
-      renderTasks();
-      toast(`Filtered by Priority ${btn.textContent.trim()}`);
-      announce(`Filtered by priority ${btn.textContent.trim()}`);
-    });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      $$(".nav-dropdown.open").forEach(dd => {
+        dd.classList.remove("open");
+        dd.querySelector(".dropdown-toggle")?.setAttribute("aria-expanded", "false");
+      });
+      if (mobileMenu?.classList.contains("open")) {
+        mobileMenu.classList.remove("open");
+        hamburgerBtn?.classList.remove("open");
+        document.querySelector(".navbarcontainer")?.classList.remove("mobile-open");
+      }
+    }
   });
 
-  // View tabs
-  viewTabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      const view = tab.dataset.view;
-      if (!view) return;
-      currentView = view;
-      setActiveTab(view);
-      refresh();
-    });
-  });
-
-  // Tab slider: initial position after paint
-  requestAnimationFrame(() => {
-    const active = document.querySelector(".view-tab.active");
-    if (active) moveTabSlider(active);
-  });
-
-  // Nav links
-  $$(".nav-link[data-view]").forEach(link => {
-    link.addEventListener("click", e => {
-      e.preventDefault();
+  // Unified Nav & Dropdown & Mobile link actions with smooth offset scrolling
+  $$(".dropdown-link, .top-nav-link, .mobile-link").forEach(link => {
+    link.addEventListener("click", (e) => {
+      const href = link.getAttribute("href");
       const view = link.dataset.view;
-      currentView = view;
-      setActiveTab(view);
-      switchToSection("tasks-section");
-      refresh();
+      const section = link.dataset.section;
+
+      if (view) {
+        currentView = view;
+        setActiveTab(view);
+        if (section) switchToSection(section);
+        refresh();
+      } else if (section) {
+        switchToSection(section);
+      }
+
+      // Smooth scroll for anchors with floating navbar offset
+      if (href && href.startsWith("#") && href.length > 1) {
+        e.preventDefault();
+        const targetEl = document.querySelector(href);
+        if (targetEl) {
+          const navOffset = 85;
+          const targetY = targetEl.getBoundingClientRect().top + window.scrollY - navOffset;
+          window.scrollTo({ top: Math.max(0, targetY), behavior: "smooth" });
+        }
+      }
+
+      // Close dropdowns and mobile menu on link click
+      $$(".nav-dropdown.open").forEach(dd => {
+        dd.classList.remove("open");
+        dd.querySelector(".dropdown-toggle")?.setAttribute("aria-expanded", "false");
+      });
+      if (mobileMenu?.classList.contains("open")) {
+        mobileMenu.classList.remove("open");
+        hamburgerBtn?.classList.remove("open");
+        document.querySelector(".navbarcontainer")?.classList.remove("mobile-open");
+      }
     });
   });
 
-  // Mobile nav links
-  $$(".mobile-link[data-view]").forEach(link => {
-    link.addEventListener("click", e => {
-      e.preventDefault();
-      const view = link.dataset.view;
-      currentView = view;
-      setActiveTab(view);
-      switchToSection("tasks-section");
-      mobileMenu.classList.remove("open");
-      hamburgerBtn.classList.remove("open");
-      refresh();
-    });
-  });
+  // ScrollSpy to highlight active top navigation link as user scrolls
+  const spyTargets = [
+    { id: "hero", selector: '.top-nav-link[data-section="hero"]' },
+    { id: "sections-anchor", selector: '.nav-dropdown:first-child .dropdown-toggle' },
+    { id: "sectors-section", selector: '.top-nav-link[data-section="sectors-section"]' },
+    { id: "sign-section", selector: '.top-nav-link[data-section="sign-section"]' }
+  ];
+  window.addEventListener("scroll", () => {
+    const scrollPos = window.scrollY + 140;
+    let activeItem = null;
+    for (const target of spyTargets) {
+      const el = document.getElementById(target.id);
+      if (el && el.offsetTop <= scrollPos) {
+        activeItem = target;
+      }
+    }
+    if (activeItem) {
+      $$(".top-nav-link").forEach(l => l.classList.remove("active"));
+      const activeEl = document.querySelector(activeItem.selector);
+      if (activeEl && activeEl.classList.contains("top-nav-link")) {
+        activeEl.classList.add("active");
+      }
+    }
+  }, { passive: true });
 
   // Priority / sort filters
   prioFilter.addEventListener("change", e => { priorityFilter = e.target.value; renderTasks(); });
