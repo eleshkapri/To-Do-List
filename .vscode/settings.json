@@ -4,5 +4,9 @@
   "files.autoSaveDelay": 500,
   "editor.formatOnSave": false,
   "liveServer.settings.donotShowInfoMsg": true,
-  "workbench.editor.enablePreview": false
+  "workbench.editor.enablePreview": false,
+  "git.enabled": true,
+  "git.autorefresh": true,
+  "git.autofetch": true,
+  "git.confirmSync": false
 }
