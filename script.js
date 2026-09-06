@@ -1,6 +1,6 @@
 /**
- * Taskflow — Emerald & Electric Violet Edition
- * Dynamic time greetings, radial progress ring, focus project cards, and full CRUD.
+ * DXM.SPACE — TASK ENGINE // MISSION CONTROL
+ * Interactive Starfield, Synthesizer Audio, Telemetry Gauge, and Full Task Management.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -9,25 +9,26 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================================================
 
     const STORAGE_KEYS = {
-        TASKS: "taskflow_ev_tasks",
-        PROJECTS: "taskflow_ev_projects",
-        NOTES: "taskflow_ev_notes",
-        THEME: "taskflow_ev_theme",
+        TASKS: "dxm_space_tasks",
+        PROJECTS: "dxm_space_projects",
+        NOTES: "dxm_space_notes",
+        THEME: "dxm_space_theme",
+        AUDIO: "dxm_space_audio_enabled"
     };
 
     const defaultProjects = [
-        { id: "proj-work", name: "Work & Career", color: "#10b981", icon: "fa-briefcase" },
-        { id: "proj-learning", name: "Learning & Code", color: "#8b5cf6", icon: "fa-code" },
-        { id: "proj-personal", name: "Personal Life", color: "#06b6d4", icon: "fa-user" },
-        { id: "proj-side", name: "Side Projects", color: "#f59e0b", icon: "fa-rocket" }
+        { id: "proj-ai", name: "Deep Space AI", color: "#762aff", icon: "fa-robot" },
+        { id: "proj-orbit", name: "Orbital Web", color: "#3b82f6", icon: "fa-satellite" },
+        { id: "proj-brand", name: "Brand Trajectory", color: "#00e5ff", icon: "fa-meteor" },
+        { id: "proj-ops", name: "Station Ops", color: "#10b981", icon: "fa-shield-halved" }
     ];
 
     const defaultTasks = [
         {
             id: "task-1",
-            title: "Submit quarterly project milestone report",
-            description: "Include sprint velocity, key deliverables, and next roadmap milestones.",
-            project: "proj-work",
+            title: "Calibrate neural telemetry sensors for Station Alpha",
+            description: "Verify synchronization on quantum downlink and test redundant signal relays.",
+            project: "proj-ai",
             priority: "p1",
             dueDate: getFormattedDate(0), // Today
             tag: "urgent",
@@ -37,9 +38,9 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             id: "task-2",
-            title: "Master Emerald & Electric Violet CSS design systems",
-            description: "Build clean glassmorphic components, glowing orbs, and responsive grids.",
-            project: "proj-learning",
+            title: "Deploy dxm.space cybernetic design tokens to production",
+            description: "Validate shiny borders, shooting star speed-lines, and responsive glass cards.",
+            project: "proj-orbit",
             priority: "p2",
             dueDate: getFormattedDate(0), // Today
             tag: "dev",
@@ -49,24 +50,24 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         {
             id: "task-3",
-            title: "Plan weekend outdoor trail & camera gear",
-            description: "Check weather forecast and prepare hydration pack.",
-            project: "proj-personal",
+            title: "Review interstellar brand guidelines & typography",
+            description: "Finalize Poppins bold italic uppercase headline scales and gradient fills.",
+            project: "proj-brand",
             priority: "p3",
             dueDate: getFormattedDate(1), // Tomorrow
-            tag: "general",
+            tag: "design",
             starred: false,
             completed: false,
             createdAt: new Date().toISOString()
         },
         {
             id: "task-4",
-            title: "Refactor task dashboard architecture & localStorage sync",
-            description: "Verify state management and add undo toast notifications.",
-            project: "proj-side",
+            title: "Conduct routine propulsion & orbital alignment check",
+            description: "Inspect thrust output and confirm zero drift across operational sectors.",
+            project: "proj-ops",
             priority: "p2",
             dueDate: getFormattedDate(2),
-            tag: "design",
+            tag: "work",
             starred: false,
             completed: true,
             createdAt: new Date().toISOString()
@@ -76,18 +77,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const defaultNotes = [
         {
             id: "note-1",
-            content: "💡 Project Idea: Build a lightweight habit tracker with visual streak counters.",
-            date: "Today"
+            content: "✦ TRANSMISSION LOG: Quantum latency reduced to 1.2ms across all regional relay clusters.",
+            date: "EARTH TIME"
         },
         {
             id: "note-2",
-            content: "📌 Books to read: Refactoring UI, Clean Code, Atomic Habits.",
-            date: "Aug 22"
+            content: "💡 CONCEPT: Implement dynamic gravitational inertia scrolling for high-velocity mission lists.",
+            date: "SEP 06"
         },
         {
             id: "note-3",
-            content: "✨ Design Tip: Emerald & Electric Violet create high-contrast, modern visual harmony.",
-            date: "Aug 21"
+            content: "🚀 PROTOCOL: Keep task trajectories focused, actionable, and aligned with orbital milestones.",
+            date: "SEP 05"
         }
     ];
 
@@ -95,7 +96,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let tasks = JSON.parse(localStorage.getItem(STORAGE_KEYS.TASKS)) || defaultTasks;
     let projects = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROJECTS)) || defaultProjects;
     let notes = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTES)) || defaultNotes;
-    let isDarkMode = localStorage.getItem(STORAGE_KEYS.THEME) === "dark";
+    let isLightMode = localStorage.getItem(STORAGE_KEYS.THEME) === "light";
+    let isAudioPlaying = localStorage.getItem(STORAGE_KEYS.AUDIO) === "true";
 
     let currentView = "today"; // 'inbox' | 'today' | 'upcoming' | 'starred' | 'completed' | 'notes' | projectId
     let currentPriorityFilter = "all";
@@ -106,18 +108,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let lastDeletedTask = null;
 
+    // Web Audio Synthesizer Context
+    let audioCtx = null;
+    let ambientDroneGain = null;
+
     // ==========================================================================
     // DOM ELEMENTS
     // ==========================================================================
 
     const body = document.body;
     const themeToggle = document.getElementById("theme-toggle");
+    const musicPlayBtn = document.getElementById("music-play");
     const globalSearch = document.getElementById("global-search");
     const sidebarAddBtn = document.getElementById("sidebar-quick-add-btn");
     const projectsList = document.getElementById("projects-list");
     const tagsList = document.getElementById("tags-list");
 
-    // Header & Hero Elements
+    // Header & Telemetry
     const headerDateText = document.getElementById("header-date-text");
     const heroGreetingText = document.getElementById("hero-greeting-text");
     const heroQuote = document.getElementById("hero-quote");
@@ -199,20 +206,196 @@ document.addEventListener("DOMContentLoaded", () => {
     const mobileSidebarClose = document.getElementById("mobile-sidebar-close");
 
     // ==========================================================================
-    // INITIALIZATION
+    // STARFIELD PARTICLE ENGINE
+    // ==========================================================================
+
+    function initStarfield() {
+        const canvas = document.getElementById("starfield-canvas");
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+
+        let width = (canvas.width = window.innerWidth);
+        let height = (canvas.height = window.innerHeight);
+
+        window.addEventListener("resize", () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            stars = createStars(numStars);
+        });
+
+        const numStars = Math.min(Math.floor((width * height) / 3000), 220);
+        
+        function createStars(count) {
+            const arr = [];
+            for (let i = 0; i < count; i++) {
+                arr.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 1.4 + 0.3,
+                    alpha: Math.random() * 0.8 + 0.2,
+                    speed: Math.random() * 0.25 + 0.05,
+                    twinkleSpeed: Math.random() * 0.02 + 0.005,
+                    twinkleDirection: Math.random() > 0.5 ? 1 : -1,
+                    hue: Math.random() > 0.8 ? 260 : Math.random() > 0.6 ? 210 : 0 // slight purple/blue tint
+                });
+            }
+            return arr;
+        }
+
+        let stars = createStars(numStars);
+
+        function renderStarfield() {
+            ctx.clearRect(0, 0, width, height);
+
+            stars.forEach((star) => {
+                // Movement
+                star.y += star.speed;
+                if (star.y > height) {
+                    star.y = 0;
+                    star.x = Math.random() * width;
+                }
+
+                // Twinkle
+                star.alpha += star.twinkleSpeed * star.twinkleDirection;
+                if (star.alpha > 0.95) {
+                    star.alpha = 0.95;
+                    star.twinkleDirection = -1;
+                } else if (star.alpha < 0.2) {
+                    star.alpha = 0.2;
+                    star.twinkleDirection = 1;
+                }
+
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                if (star.hue > 0) {
+                    ctx.fillStyle = `hsla(${star.hue}, 90%, 75%, ${star.alpha})`;
+                } else {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${star.alpha})`;
+                }
+                ctx.fill();
+            });
+
+            requestAnimationFrame(renderStarfield);
+        }
+
+        renderStarfield();
+    }
+
+    // ==========================================================================
+    // COSMIC WEB AUDIO SYNTHESIZER (dxm.space Equalizer Player)
+    // ==========================================================================
+
+    function initAudio() {
+        if (isAudioPlaying) {
+            musicPlayBtn.classList.add("playing");
+        }
+    }
+
+    function toggleCosmicAudio() {
+        try {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+
+            if (audioCtx.state === "suspended") {
+                audioCtx.resume();
+            }
+
+            isAudioPlaying = !isAudioPlaying;
+            localStorage.setItem(STORAGE_KEYS.AUDIO, isAudioPlaying);
+
+            if (isAudioPlaying) {
+                musicPlayBtn.classList.add("playing");
+                startAmbientDrone();
+                showToast("✦ AUDIO SYNTHESIZER: ONLINE");
+            } else {
+                musicPlayBtn.classList.remove("playing");
+                stopAmbientDrone();
+                showToast("✦ AUDIO SYNTHESIZER: MUTED");
+            }
+        } catch (e) {
+            console.warn("Audio Context error:", e);
+        }
+    }
+
+    function startAmbientDrone() {
+        if (!audioCtx) return;
+        try {
+            const osc = audioCtx.createOscillator();
+            const filter = audioCtx.createBiquadFilter();
+            ambientDroneGain = audioCtx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(55, audioCtx.currentTime); // Deep space A1 drone
+
+            filter.type = "lowpass";
+            filter.frequency.setValueAtTime(220, audioCtx.currentTime);
+
+            ambientDroneGain.gain.setValueAtTime(0.001, audioCtx.currentTime);
+            ambientDroneGain.gain.exponentialRampToValueAtTime(0.04, audioCtx.currentTime + 2);
+
+            osc.connect(filter);
+            filter.connect(ambientDroneGain);
+            ambientDroneGain.connect(audioCtx.destination);
+
+            osc.start();
+        } catch (e) {
+            console.warn("Drone audio error", e);
+        }
+    }
+
+    function stopAmbientDrone() {
+        if (ambientDroneGain && audioCtx) {
+            try {
+                ambientDroneGain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+            } catch (e) {
+                // ignore
+            }
+        }
+    }
+
+    function playCyberChime(frequency = 587.33, duration = 0.3) {
+        if (!isAudioPlaying) return;
+        try {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx.state === "suspended") audioCtx.resume();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+
+            gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    // ==========================================================================
+    // INITIALIZATION & REFRESH
     // ==========================================================================
 
     function init() {
-        applyTheme(isDarkMode);
+        applyTheme(isLightMode);
+        initStarfield();
+        initAudio();
         populateProjectDropdowns();
         setupEventListeners();
         taskInputDate.value = getFormattedDate(0);
         refreshApp();
     }
-
-    // ==========================================================================
-    // REFRESH & RENDER
-    // ==========================================================================
 
     function refreshApp() {
         renderSidebarProjects();
@@ -226,48 +409,46 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderHeroBanner() {
         const now = new Date();
-        const hour = now.getHours();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        headerDateText.textContent = `EARTH TIME // ${year}.${month}.${day}`;
 
-        let greeting = "Good Evening, Elesh! ✨";
-        if (hour < 12) greeting = "Good Morning, Elesh! ☀️";
-        else if (hour < 18) greeting = "Good Afternoon, Elesh! 🌤️";
+        const hour = now.getHours();
+        let greeting = "WELCOME ABOARD, ELESH";
+        if (hour < 12) greeting = "MORNING TRAJECTORY // STATION ALPHA";
+        else if (hour < 18) greeting = "AFTERNOON ORBIT // STATION ALPHA";
+        else greeting = "EVENING VECTORS // STATION ALPHA";
 
         heroGreetingText.textContent = greeting;
 
-        const dateStr = now.toLocaleDateString("en-US", {
-            weekday: "long",
-            day: "numeric",
-            month: "long"
-        });
-        headerDateText.textContent = dateStr;
-
-        // Daily Progress Ring Calculations
+        // Telemetry Calculations
         const todayStr = getFormattedDate(0);
         const todayTasks = tasks.filter(t => t.dueDate === todayStr);
         const todayTotal = todayTasks.length;
         const todayDone = todayTasks.filter(t => t.completed).length;
         const todayActive = todayTotal - todayDone;
 
-        heroStatActive.textContent = `${todayActive} Active`;
-        heroStatDone.textContent = `${todayDone} Done`;
+        heroStatActive.textContent = `${todayActive} ACTIVE MISSIONS`;
+        heroStatDone.textContent = `${todayDone} LOGGED`;
 
         const totalTasks = tasks.length;
         const completedTasks = tasks.filter(t => t.completed).length;
-        const overallPercent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+        const percent = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-        if (overallPercent >= 80) {
-            heroStatStatus.textContent = "🚀 High Velocity";
-        } else if (overallPercent >= 40) {
-            heroStatStatus.textContent = "⚡ On Track";
+        if (percent >= 80) {
+            heroStatStatus.textContent = "WARP VELOCITY // OPTIMAL";
+        } else if (percent >= 40) {
+            heroStatStatus.textContent = "CRUISING VELOCITY";
         } else {
-            heroStatStatus.textContent = "🌱 Starting Day";
+            heroStatStatus.textContent = "LAUNCH READINESS";
         }
 
-        // SVG Circle circumference is 2 * PI * 42 ~= 264
+        // SVG Radial Progress Ring (Circumference 264)
         const circumference = 264;
-        const offset = circumference - (overallPercent / 100) * circumference;
+        const offset = circumference - (percent / 100) * circumference;
         ringFill.style.strokeDashoffset = offset;
-        ringPercent.textContent = `${overallPercent}%`;
+        ringPercent.textContent = `${percent}%`;
     }
 
     function renderFocusCards() {
@@ -280,18 +461,18 @@ document.addEventListener("DOMContentLoaded", () => {
             const percent = total > 0 ? Math.round((done / total) * 100) : 0;
 
             const card = document.createElement("div");
-            card.className = "focus-card";
+            card.className = "focus-card card-border shiny-top";
             card.style.setProperty("--card-color", proj.color);
             card.innerHTML = `
                 <div class="focus-card-top">
                     <div class="focus-icon-box">
-                        <i class="fa-solid ${proj.icon || 'fa-folder'}"></i>
+                        <i class="fa-solid ${proj.icon || 'fa-satellite'}"></i>
                     </div>
-                    <span class="focus-count-badge">${done}/${total} Done</span>
+                    <span class="focus-count-badge">${done}/${total} LOGGED</span>
                 </div>
                 <div class="focus-card-body">
                     <h4>${proj.name}</h4>
-                    <p>${total - done} active tasks</p>
+                    <p>${total - done} active mission trajectories</p>
                     <div class="focus-progress-track">
                         <div class="focus-progress-bar" style="width: ${percent}%;"></div>
                     </div>
@@ -311,20 +492,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderHeader() {
         if (currentView === "inbox") {
-            viewTitle.textContent = "Inbox";
+            viewTitle.textContent = "SIGNAL INBOX // UNFILTERED";
         } else if (currentView === "today") {
-            viewTitle.textContent = "Today's Tasks";
+            viewTitle.textContent = "CURRENT ORBIT MISSIONS";
         } else if (currentView === "upcoming") {
-            viewTitle.textContent = "Upcoming Schedule";
+            viewTitle.textContent = "FORWARD TRAJECTORY HORIZON";
         } else if (currentView === "starred") {
-            viewTitle.textContent = "Important & High Priority";
+            viewTitle.textContent = "CRITICAL PRIORITY THRUST";
         } else if (currentView === "completed") {
-            viewTitle.textContent = "Completed Archive";
+            viewTitle.textContent = "ARCHIVED MISSION LOGS";
         } else if (currentView === "notes") {
-            viewTitle.textContent = "Idea Board";
+            viewTitle.textContent = "TRANSMISSIONS & NOTES";
         } else {
             const proj = projects.find(p => p.id === currentView);
-            viewTitle.textContent = proj ? `${proj.name} Tasks` : "Tasks";
+            viewTitle.textContent = proj ? `${proj.name.toUpperCase()} // SECTOR LOG` : "MISSION LOG";
         }
     }
 
@@ -336,7 +517,7 @@ document.addEventListener("DOMContentLoaded", () => {
             projects.forEach(p => {
                 const opt = document.createElement("option");
                 opt.value = p.id;
-                opt.textContent = `# ${p.name}`;
+                opt.textContent = `✦ ${p.name.toUpperCase()}`;
                 select.appendChild(opt);
             });
         });
@@ -350,8 +531,8 @@ document.addEventListener("DOMContentLoaded", () => {
             btn.className = `project-item-btn ${currentView === proj.id ? "active" : ""}`;
             btn.innerHTML = `
                 <div class="project-left">
-                    <span class="project-dot" style="background-color: ${proj.color};"></span>
-                    <span>${proj.name}</span>
+                    <span class="project-dot" style="background-color: ${proj.color}; color: ${proj.color};"></span>
+                    <span>${proj.name.toUpperCase()}</span>
                 </div>
                 <span class="nav-count">${count}</span>
             `;
@@ -442,15 +623,14 @@ document.addEventListener("DOMContentLoaded", () => {
         const activeList = filtered.filter(t => !t.completed);
         const completedList = filtered.filter(t => t.completed);
 
-        viewTaskBadge.textContent = `${activeList.length} task${activeList.length === 1 ? "" : "s"}`;
+        viewTaskBadge.textContent = `${activeList.length} MISSION${activeList.length === 1 ? "" : "S"}`;
 
-        // Empty state check
         if (activeList.length === 0 && (currentView === "completed" ? completedList.length === 0 : true)) {
             emptyState.classList.remove("hidden");
             if (currentView === "completed") {
-                emptyStateMsg.textContent = "No completed tasks yet. Mark tasks done to see them archived here!";
+                emptyStateMsg.textContent = "Mission logs empty. Complete active trajectories to log them.";
             } else {
-                emptyStateMsg.textContent = "Great job! Enjoy your time or capture a new task above.";
+                emptyStateMsg.textContent = "All orbital trajectories clear. Transmit a new mission above.";
             }
         } else {
             emptyState.classList.add("hidden");
@@ -477,17 +657,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function createTaskRow(task) {
         const li = document.createElement("li");
-        li.className = `task-row ${task.completed ? "completed" : ""}`;
+        li.className = `task-row shiny-top ${task.completed ? "completed" : ""}`;
         li.dataset.id = task.id;
 
-        const proj = projects.find(p => p.id === task.project) || { name: "Inbox", color: "#10b981" };
+        const proj = projects.find(p => p.id === task.project) || { name: "Station Inbox", color: "#3b82f6" };
         li.style.setProperty("--task-project-color", proj.color);
 
         const dueDateInfo = formatDue(task.dueDate);
 
         li.innerHTML = `
             <div class="task-row-left">
-                <button class="check-circle ${task.priority || 'p4'}" aria-label="Complete task">
+                <button class="check-circle ${task.priority || 'p4'}" aria-label="Toggle Mission Log">
                     <i class="fa-solid fa-check"></i>
                 </button>
                 <div class="task-content">
@@ -495,39 +675,38 @@ document.addEventListener("DOMContentLoaded", () => {
                     ${task.description ? `<p class="task-desc-text">${escapeHTML(task.description)}</p>` : ""}
                     <div class="task-chips">
                         <span class="meta-pill">
-                            <span class="project-dot" style="background-color: ${proj.color};"></span>
-                            ${proj.name}
+                            <span class="project-dot" style="background-color: ${proj.color}; color: ${proj.color};"></span>
+                            ${proj.name.toUpperCase()}
                         </span>
                         ${task.dueDate ? `
                             <span class="meta-pill ${dueDateInfo.className}">
-                                <i class="fa-regular fa-calendar"></i> ${dueDateInfo.text}
+                                <i class="fa-regular fa-clock"></i> ${dueDateInfo.text}
                             </span>
                         ` : ""}
-                        ${task.priority && task.priority !== "p4" ? `
+                        ${task.priority ? `
                             <span class="meta-pill priority-${task.priority}">
-                                ${task.priority.toUpperCase()}
+                                ${task.priority.toUpperCase()} // ${getPriorityLabel(task.priority)}
                             </span>
                         ` : ""}
                         ${task.tag && task.tag !== "general" ? `
-                            <span class="meta-pill">#${task.tag}</span>
+                            <span class="meta-pill">#${task.tag.toUpperCase()}</span>
                         ` : ""}
                     </div>
                 </div>
             </div>
             <div class="task-row-actions">
-                <button class="row-action-btn btn-star ${task.starred ? "starred" : ""}" title="Star task">
+                <button class="row-action-btn btn-star ${task.starred ? "starred" : ""}" title="Critical priority toggle">
                     <i class="${task.starred ? "fa-solid fa-star" : "fa-regular fa-star"}"></i>
                 </button>
-                <button class="row-action-btn btn-edit" title="Edit task">
+                <button class="row-action-btn btn-edit" title="Update specifications">
                     <i class="fa-regular fa-pen-to-square"></i>
                 </button>
-                <button class="row-action-btn btn-delete" title="Delete task">
+                <button class="row-action-btn btn-delete" title="Abort mission">
                     <i class="fa-regular fa-trash-can"></i>
                 </button>
             </div>
         `;
 
-        // Action Listeners
         li.querySelector(".check-circle").addEventListener("click", () => toggleTaskComplete(task.id));
         li.querySelector(".btn-star").addEventListener("click", () => toggleTaskStar(task.id));
         li.querySelector(".btn-edit").addEventListener("click", () => openEditModal(task.id));
@@ -536,21 +715,28 @@ document.addEventListener("DOMContentLoaded", () => {
         return li;
     }
 
+    function getPriorityLabel(p) {
+        if (p === "p1") return "CRITICAL";
+        if (p === "p2") return "ELEVATED";
+        if (p === "p3") return "STANDARD";
+        return "ROUTINE";
+    }
+
     // ==========================================================================
-    // NOTES WALL
+    // NOTES & TRANSMISSIONS
     // ==========================================================================
 
     function renderNotes() {
         notesGrid.innerHTML = "";
         notes.forEach(note => {
             const card = document.createElement("div");
-            card.className = "note-card";
+            card.className = "note-card card-border shiny-top";
             card.innerHTML = `
-                <textarea class="note-textarea" rows="5">${escapeHTML(note.content)}</textarea>
+                <textarea class="note-textarea" rows="6">${escapeHTML(note.content)}</textarea>
                 <div class="note-footer">
-                    <span>${note.date || "Note"}</span>
-                    <button class="note-delete-btn" title="Delete note">
-                        <i class="fa-regular fa-trash-can"></i>
+                    <span>${note.date || "SIGNAL"}</span>
+                    <button class="note-delete-btn" title="Purge transmission">
+                        <i class="fa-solid fa-trash-can"></i>
                     </button>
                 </div>
             `;
@@ -566,7 +752,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 saveNotes();
                 renderNotes();
                 renderCounts();
-                showToast("Note removed");
+                playCyberChime(350, 0.2);
+                showToast("✦ TRANSMISSION PURGED");
             });
 
             notesGrid.appendChild(card);
@@ -574,17 +761,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================================================
-    // TASK CRUD LOGIC
+    // TASK CRUD OPERATIONS
     // ==========================================================================
 
-    function addTask(title, desc = "", project = "proj-work", priority = "p2", dueDate = "", tag = "general") {
+    function addTask(title, desc = "", project = "proj-ai", priority = "p2", dueDate = "", tag = "general") {
         if (!title.trim()) return;
 
         const newTask = {
             id: `task-${Date.now()}`,
             title: title.trim(),
             description: desc.trim(),
-            project: project || (projects[0] ? projects[0].id : "proj-work"),
+            project: project || (projects[0] ? projects[0].id : "proj-ai"),
             priority: priority || "p2",
             dueDate: dueDate || getFormattedDate(0),
             tag: tag || "general",
@@ -596,7 +783,8 @@ document.addEventListener("DOMContentLoaded", () => {
         tasks.unshift(newTask);
         saveTasks();
         refreshApp();
-        showToast("Task added to your list ✨");
+        playCyberChime(880, 0.25);
+        showToast("✦ MISSION INITIALIZED & TRANSMITTED");
     }
 
     function toggleTaskComplete(id) {
@@ -606,7 +794,14 @@ document.addEventListener("DOMContentLoaded", () => {
         task.completed = !task.completed;
         saveTasks();
         refreshApp();
-        showToast(task.completed ? "Task completed! 🎉" : "Task restored to active");
+
+        if (task.completed) {
+            playCyberChime(1046.5, 0.4); // High C chime
+            showToast("✦ ORBITAL MILESTONE LOGGED // SUCCESS");
+        } else {
+            playCyberChime(523.25, 0.2);
+            showToast("✦ TASK RESTORED TO ACTIVE TRAJECTORY");
+        }
     }
 
     function toggleTaskStar(id) {
@@ -616,7 +811,8 @@ document.addEventListener("DOMContentLoaded", () => {
         task.starred = !task.starred;
         saveTasks();
         refreshApp();
-        showToast(task.starred ? "Marked as Important ⭐" : "Removed from Important");
+        playCyberChime(784, 0.2);
+        showToast(task.starred ? "✦ CRITICAL PRIORITY LOCK ENGAGED" : "✦ CRITICAL LOCK RELEASED");
     }
 
     function deleteTask(id) {
@@ -627,14 +823,16 @@ document.addEventListener("DOMContentLoaded", () => {
         tasks.splice(idx, 1);
         saveTasks();
         refreshApp();
+        playCyberChime(300, 0.3);
 
-        showToast("Task deleted", true, () => {
+        showToast("✦ MISSION ABORTED", true, () => {
             if (lastDeletedTask) {
                 tasks.push(lastDeletedTask);
                 saveTasks();
                 refreshApp();
                 lastDeletedTask = null;
-                showToast("Task restored");
+                playCyberChime(660, 0.2);
+                showToast("✦ MISSION RESTORED");
             }
         });
     }
@@ -667,19 +865,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         saveTasks();
         refreshApp();
-        showToast("Task updated successfully!");
+        playCyberChime(880, 0.2);
+        showToast("✦ TELEMETRY SPECIFICATIONS UPDATED");
     }
 
     function addProject(name, color) {
         if (!name.trim()) return;
 
-        const icons = ["fa-briefcase", "fa-code", "fa-user", "fa-rocket", "fa-palette", "fa-heart"];
+        const icons = ["fa-satellite", "fa-meteor", "fa-robot", "fa-shield-halved", "fa-shuttle-space", "fa-globe"];
         const randomIcon = icons[Math.floor(Math.random() * icons.length)];
 
         const newProj = {
             id: `proj-${Date.now()}`,
             name: name.trim(),
-            color: color || "#10b981",
+            color: color || "#762aff",
             icon: randomIcon
         };
 
@@ -688,20 +887,22 @@ document.addEventListener("DOMContentLoaded", () => {
         populateProjectDropdowns();
         renderSidebarProjects();
         renderFocusCards();
-        showToast(`Project #${newProj.name} created!`);
+        playCyberChime(800, 0.25);
+        showToast(`✦ SECTOR // ${newProj.name.toUpperCase()} LAUNCHED`);
     }
 
     function addNote() {
         const newNote = {
             id: `note-${Date.now()}`,
             content: "",
-            date: new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })
+            date: "TRANSMISSION"
         };
         notes.unshift(newNote);
         saveNotes();
         renderNotes();
         renderCounts();
-        showToast("New note created");
+        playCyberChime(660, 0.2);
+        showToast("✦ NEW TRANSMISSION LOG OPENED");
     }
 
     // ==========================================================================
@@ -723,14 +924,14 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    function applyTheme(dark) {
-        isDarkMode = dark;
-        body.classList.toggle("dark-mode", isDarkMode);
+    function applyTheme(isLight) {
+        isLightMode = isLight;
+        body.classList.toggle("light-starlight", isLightMode);
         const icon = themeToggle.querySelector("i");
         if (icon) {
-            icon.className = isDarkMode ? "fa-solid fa-sun" : "fa-solid fa-moon";
+            icon.className = isLightMode ? "fa-solid fa-sun" : "fa-solid fa-moon";
         }
-        localStorage.setItem(STORAGE_KEYS.THEME, isDarkMode ? "dark" : "light");
+        localStorage.setItem(STORAGE_KEYS.THEME, isLightMode ? "light" : "dark");
     }
 
     function openModal(modal) {
@@ -748,7 +949,7 @@ document.addEventListener("DOMContentLoaded", () => {
         toast.className = "toast";
         toast.innerHTML = `
             <span>${msg}</span>
-            ${allowUndo ? `<button class="btn btn-sm" style="color: #34d399; padding: 2px 4px;" id="toast-undo">Undo</button>` : ""}
+            ${allowUndo ? `<button class="btn-secondary" style="padding: 4px 10px; font-size: 0.7rem; margin-left: 0.5rem;" id="toast-undo"><span>UNDO</span></button>` : ""}
         `;
 
         if (allowUndo && undoCb) {
@@ -762,8 +963,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         setTimeout(() => {
             toast.classList.add("toast-out");
-            setTimeout(() => toast.remove(), 250);
-        }, 3200);
+            setTimeout(() => toast.remove(), 300);
+        }, 3400);
     }
 
     // ==========================================================================
@@ -771,8 +972,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // ==========================================================================
 
     function setupEventListeners() {
+        // Equalizer Audio Synthesizer Button
+        musicPlayBtn.addEventListener("click", toggleCosmicAudio);
+
         // Theme Toggle
-        themeToggle.addEventListener("click", () => applyTheme(!isDarkMode));
+        themeToggle.addEventListener("click", () => applyTheme(!isLightMode));
 
         // Global Search
         globalSearch.addEventListener("input", (e) => {
@@ -783,7 +987,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Quick Add Focus
         sidebarAddBtn.addEventListener("click", () => {
             taskInputTitle.focus();
-            window.scrollTo({ top: 320, behavior: "smooth" });
+            window.scrollTo({ top: 380, behavior: "smooth" });
         });
 
         // Inline Add Task
@@ -815,7 +1019,7 @@ document.addEventListener("DOMContentLoaded", () => {
             taskInputTitle.focus();
         }
 
-        // Nav Buttons (Inbox, Today, Upcoming, Starred, Completed, Notes)
+        // Nav Buttons
         document.querySelectorAll(".nav-btn").forEach(btn => {
             btn.addEventListener("click", () => {
                 currentView = btn.dataset.view;
@@ -930,7 +1134,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ==========================================================================
-    // PERSISTENCE & HELPERS
+    // UTILITIES
     // ==========================================================================
 
     function saveTasks() {
@@ -957,14 +1161,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const tomorrow = getFormattedDate(1);
 
         if (dateStr < today) {
-            return { text: "Overdue", className: "overdue" };
+            return { text: "ORBIT EXPIRED", className: "overdue" };
         } else if (dateStr === today) {
-            return { text: "Today", className: "today" };
+            return { text: "ORBIT TODAY", className: "today" };
         } else if (dateStr === tomorrow) {
-            return { text: "Tomorrow", className: "" };
+            return { text: "HORIZON: T-1D", className: "" };
         } else {
             const d = new Date(dateStr + "T00:00:00");
-            return { text: d.toLocaleDateString("en-US", { month: "short", day: "numeric" }), className: "" };
+            const m = d.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+            return { text: `HORIZON: ${m} ${d.getDate()}`, className: "" };
         }
     }
 
